@@ -1,18 +1,21 @@
 var mongoose = require('mongoose'),
 schema = mongoose.Schema,
+utilities = require('../utils.js');
 //Define User schema
 User = new schema({
-	id	: 'String',
-	name : 'String',
 	email : 'String',
+	phone : 'String',
 	first_name : 'String',
 	last_name : 'String',
-	gender : 'String',
-	link : 'String',
 	created_at : 'Number',
 	last_login : 'Number',
-	oauth : 'Mixed'
+	oauth : 'Mixed',
+	isVerified : 'Boolean',
+	verifier : 'String'
 }),
+UnverifiedUser = mongoose.model('user_unverified',User),
+shortId = require('shortid');
+
 //Create application user from passport standard profile object
 getUserFromOauthProfile = function(profile){
 	var user = {
@@ -35,7 +38,6 @@ getUserFromOauthProfile = function(profile){
 	
 };
 
-
 User.statics.oAuthLogin = function(profile,done){
 	if(!profile || !profile.id || !profile.provider){
 		done('Could not find OAuth user profile.');
@@ -57,12 +59,59 @@ User.statics.oAuthLogin = function(profile,done){
 			user = getUserFromOauthProfile(profile);
 			//Add user to the system
 			_this.add(user,done);
-		} else
+		} else{
 			done(err,user);
+		}
 	});
 };
-User.statics.login = function(){
-
+User.statics.authenticate = function(authenticationRequest,done){
+	//TODO Validate email and phone
+	var searchQuery = {};
+    if(authenticationRequest.email)
+        searchQuery.email = authenticationRequest.email;
+    else if(req.body.phone)
+        searchQuery.phone = authenticationRequest.phone;
+    else{
+    	res.status(400);
+        res.send({
+        	error : 'Bad request'
+        });
+        return;
+    }
+    //Check if user is already exists
+    User.findOne(searchQuery,function(err, user){
+        if(err){
+            console.log('Error while loggin in : ' + err);
+            done(err, 'Error while logging in');
+            return;
+        }
+        if(!user){
+        	//Save user
+            User.add({
+                email : authenticationRequest.email,
+                phone : authenticationRequest.phone,
+                first_name : authenticationRequest.firstname,
+                last_name : authenticationRequest.lastname
+            },function(error, user){
+                if(error){
+                	done(error)
+                    return;
+                }
+                user.sendVerification();
+                done(false,{
+                	user : user,
+                	needverfication : true
+                });
+            });
+        } else{
+        	//Login user
+            user.sendVerification();
+            done(false,{
+                	user : user,
+                	needverfication : true
+            });
+        }
+    });
 };
 /*
 * Check and add user to the system
@@ -73,16 +122,55 @@ User.statics.add = function(profile,done){
 		return;
 	}
 	var _this = this;
-	profile.created_at = new Date().getTime();
-	_this.create(profile)
-    .then(function(user){
-    	console.log(user);
-        done(false, user);
-    });
+	var user = new User(profile);
+	user.created_at = new Date().getTime();
+	user.save(function(err){
+		if(err){
+			console.log('Error while saving user ', err);
+			done(true,err);
+			return;
+		}
+		done(null,user);
+	});
 };
-User.statics.isExists = function(userId){
+User.methods.sendVerification = function(){
+	this.isVerified = false;
+	this.verifier = shortId.generate();
+	this.save();
+	if(this.email){
+		//Send verification email
+		utilities.sendHHEmail({
+			subject : 'Hillhacks Verification',
+			to : this.email,
+			text : 'Verification code for hillhacks is ' + this.verifier
+		});	
+	}
+	
+}
 
-};
+User.statics.verify = function(verifyquery,done){
+	//Check if email/phone exists with the verifier
+	this.findOne({'$and':[{
+		'$or' : [{
+			email : verifyquery.email
+		},{
+			phone : verifyquery.phone
+		}]
+	},{
+		verifier : verifyquery.code
+	}]},function(error, user){
+		if(error){
+			done(error);
+			return;
+		}
+		if(user){
+			user.isVerified = true;
+			user.verifier = undefined;
+			user.save();
+		}
+		done(false,user);
+	});
+}
 
 
 module.exports = mongoose.model('users',User);
