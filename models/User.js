@@ -1,6 +1,6 @@
 var mongoose = require('mongoose'),
 schema = mongoose.Schema,
-utilities = require('../utils.js');
+utilities = require('../utils.js'),
 //Define User schema
 User = new schema({
 	email : 'String',
@@ -13,7 +13,6 @@ User = new schema({
 	isVerified : 'Boolean',
 	verifier : 'String'
 }),
-UnverifiedUser = mongoose.model('user_unverified',User),
 shortId = require('shortid');
 
 //Create application user from passport standard profile object
@@ -58,7 +57,7 @@ User.statics.oAuthLogin = function(profile,done){
 		if(!user){
 			user = getUserFromOauthProfile(profile);
 			//Add user to the system
-			_this.add(user,done);
+			_this.addUser(user,done);
 		} else{
 			done(err,user);
 		}
@@ -66,10 +65,11 @@ User.statics.oAuthLogin = function(profile,done){
 };
 User.statics.authenticate = function(authenticationRequest,done){
 	//TODO Validate email and phone
-	var searchQuery = {};
+	var searchQuery = {},
+	_this = this;
     if(authenticationRequest.email)
         searchQuery.email = authenticationRequest.email;
-    else if(req.body.phone)
+    else if(authenticationRequest.phone)
         searchQuery.phone = authenticationRequest.phone;
     else{
     	res.status(400);
@@ -79,7 +79,7 @@ User.statics.authenticate = function(authenticationRequest,done){
         return;
     }
     //Check if user is already exists
-    User.findOne(searchQuery,function(err, user){
+    _this.findOne(searchQuery,function(err, user){
         if(err){
             console.log('Error while loggin in : ' + err);
             done(err, 'Error while logging in');
@@ -87,7 +87,7 @@ User.statics.authenticate = function(authenticationRequest,done){
         }
         if(!user){
         	//Save user
-            User.add({
+            _this.addUser({
                 email : authenticationRequest.email,
                 phone : authenticationRequest.phone,
                 first_name : authenticationRequest.firstname,
@@ -116,13 +116,13 @@ User.statics.authenticate = function(authenticationRequest,done){
 /*
 * Check and add user to the system
 */
-User.statics.add = function(profile,done){
+User.statics.addUser = function(profile,done){
 	if(!profile){
 		done('Could not find user profile.');
 		return;
 	}
 	var _this = this;
-	var user = new User(profile);
+	var user = new _this(profile);
 	user.created_at = new Date().getTime();
 	user.save(function(err){
 		if(err){
@@ -148,28 +148,34 @@ User.methods.sendVerification = function(){
 	
 }
 
-User.statics.verify = function(verifyquery,done){
+User.statics.verify = function(identifier, code ,done){
 	//Check if email/phone exists with the verifier
-	this.findOne({'$and':[{
-		'$or' : [{
-			email : verifyquery.email
-		},{
-			phone : verifyquery.phone
-		}]
-	},{
-		verifier : verifyquery.code
-	}]},function(error, user){
+	this.findByIdentifier(identifier,function(error, user){
 		if(error){
-			done(error);
-			return;
+			return done(error);
 		}
-		if(user){
-			user.isVerified = true;
-			user.verifier = undefined;
-			user.save();
+		if(!user){
+			return done('Could not find user by identifier ' + identifier);
 		}
-		done(false,user);
+		if(user.verifier !== code){
+			return done('Code did not match.');
+		}
+		user.isVerified = true;
+		user.verifier = undefined;
+		user.last_login = new Date().getTime();
+		user.save();
+		return done(null,user);
 	});
+}
+
+User.statics.findByIdentifier = function(emailOrPhone, done){
+	this.findOne({
+		'$and':[{'$or' : [{
+			email : emailOrPhone
+		},{
+			phone : emailOrPhone
+		}]
+	}]},done);
 }
 
 

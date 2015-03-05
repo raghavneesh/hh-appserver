@@ -6,7 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session = require('express-session');
 var mongoose = require('mongoose');
-require('./auth.js');
+
 //Get appliation configuration
 var applicationConfig = require('./conf/appconf').conf;
 //Initialize connection with database
@@ -26,7 +26,7 @@ var app = express();
 
 //require Passport 
 var passport = require('passport');
-
+require('./auth.js')(passport);
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -48,6 +48,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(passport.authenticate('remember-me'));
 
 
 app.use(function(req, res, next){
@@ -77,9 +78,13 @@ app.use(function(req, res, next) {
 if (app.get('env') === 'development') {
     app.use(function(err, req, res, next) {
         res.status(err.status || 500);
-        res.render('error', {
+        /*res.render('error', {
             message: err.message,
             error: err
+        });*/
+        res.send({
+            error : err,
+            message : err.message
         });
     });
 }
@@ -88,12 +93,15 @@ if (app.get('env') === 'development') {
 // no stacktraces leaked to user
 app.use(function(err, req, res, next) {
     res.status(err.status || 500);
-    res.render('error', {
+    res.send({
+        error : err,
+        message : err.message
+    });
+    /*res.render('error', {
         message: err.message,
         error: {}
-    });
+    });*/
 });
-
 
 
 module.exports = app;
