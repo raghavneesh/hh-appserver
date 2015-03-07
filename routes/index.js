@@ -29,7 +29,7 @@ router.post('/authenticate',function(req,res,next){
 		if(error){
 			res.status(500);
 			res.send({
-				error : 'Error while logging in'
+				error : error
 			});
 		} else 
 			res.send(response);

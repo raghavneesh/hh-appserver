@@ -13,7 +13,9 @@ User = new schema({
 	isVerified : 'Boolean',
 	verifier : 'String'
 }),
-shortId = require('shortid');
+getVerifier = function(){
+	return Math.floor(100000 + Math.random() * 900000);
+};
 
 //Create application user from passport standard profile object
 getUserFromOauthProfile = function(profile){
@@ -65,6 +67,11 @@ User.statics.oAuthLogin = function(profile,done){
 };
 User.statics.authenticate = function(authenticationRequest,done){
 	//TODO Validate email and phone
+	if((authenticationRequest.email && !utilities.isValidEmail(authenticationRequest.email))
+		|| (authenticationRequest.phone && !utilities.isValidPhone(authenticationRequest.phone))
+		){
+		return done('Could not find valid identifier.');
+	}
 	var searchQuery = {},
 	_this = this;
     if(authenticationRequest.email)
@@ -72,17 +79,14 @@ User.statics.authenticate = function(authenticationRequest,done){
     else if(authenticationRequest.phone)
         searchQuery.phone = authenticationRequest.phone;
     else{
-    	res.status(400);
-        res.send({
-        	error : 'Bad request'
-        });
+    	done('Could not find identifier.');
         return;
     }
     //Check if user is already exists
     _this.findOne(searchQuery,function(err, user){
         if(err){
             console.log('Error while loggin in : ' + err);
-            done(err, 'Error while logging in');
+            done('Error while logging in');
             return;
         }
         if(!user){
@@ -135,7 +139,7 @@ User.statics.addUser = function(profile,done){
 };
 User.methods.sendVerification = function(){
 	this.isVerified = false;
-	this.verifier = shortId.generate();
+	this.verifier = getVerifier();
 	this.save();
 	if(this.email){
 		//Send verification email
