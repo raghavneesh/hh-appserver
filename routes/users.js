@@ -1,7 +1,8 @@
 var express = require('express');
 var router = express.Router(),
 utilities = require('../utils.js'),
-Booking = require('../models/Booking');
+Booking = require('../models/Booking'),
+Talk = require('../models/Talk');
 
 /* GET users listing. */
 router.get('/', global.isAuthenticated, function(req, res) {
@@ -57,6 +58,91 @@ router.get('/reservedates',global.isAuthenticated, function(req, res){
 			});
 		}
 		res.json(booking);
+	});
+});
+
+
+
+router.post('/talk/add', global.isAuthenticated, function(req, res){
+	var talk = new Talk();
+	talk.saveTalk(req.body, req.user._id, function(error, talk){
+		if(error){
+			res.status(500);
+			return res.json({
+				error : error
+			});
+		}
+		res.json(talk);
+	});
+});
+router.get('/talk/:id', function(req, res){
+	var talkId = req.params.id;
+	Talk.findOne({
+		_id : talkId
+	},function(error, talk){
+		if(error){
+			return res.json({
+				error : error
+			});
+		}
+		if(!talk){
+			res.status(404);
+			return res.json({
+				error : 'Talk not found'
+			});
+		}
+		res.json(talk);
+	});
+});
+
+router.post('/talk/edit/:id', global.isAuthenticated, function(req, res){
+	var talkId = req.params.id;
+	Talk.findOne({
+		_id : talkId
+	},function(error, talk){
+		if(error){
+			return res.json({
+				error : error
+			});
+		}
+		if(!talk){
+			res.status(404);
+			return res.json({
+				error : 'Talk not found'
+			});
+		}
+		talk.saveTalk(req.body, req.user._id, function(error, updatedTalk){
+			if(error){
+				res.status(500);
+				return res.json({
+					error : error
+				});
+			}
+			res.json(updatedTalk);
+		});
+	});
+});
+
+router.get('/talk/delete/:id',global.isAuthenticated, function(req, res){
+	var talkId = req.params.id;
+	Talk.findOne({
+		_id : talkId
+	},function(error, talk){
+		if(error){
+			return res.json({
+				error : error
+			});
+		}
+		if(!talk){
+			res.status(404);
+			return res.json({
+				error : 'Talk not found'
+			});
+		}
+		talk.remove();
+		res.json({
+			deleted : true
+		});
 	});
 });
 

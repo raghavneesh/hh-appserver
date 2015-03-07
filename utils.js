@@ -109,6 +109,18 @@ utils = {
 			eventDates.push(formattedDate.valueOf());
 		}
 		return eventDates;
+	},
+	getLocation : function(locationString){
+		if(!locationString)
+			return;
+		var location = {},
+		locationInfo = locationString.split('~');
+		location.name = locationInfo[0];
+		if(locationInfo.length > 2){
+			location.lat = locationInfo[1];
+			location.lng = locationInfo[2];
+		}
+		return location;
 	}	
 }
 
