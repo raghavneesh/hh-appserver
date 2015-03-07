@@ -18,6 +18,11 @@ mongoose.connect(
         mongos : true
     });
 
+global.Event = {
+    startDate : applicationConfig.event.startDate,
+    endDate : applicationConfig.event.endDate
+};
+global.isAuthenticated = ensureAuthenticated;
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
@@ -63,7 +68,6 @@ app.use(function(req, res, next){
 app.use('/', routes);
 app.use('/users', users);
 
-
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
     var err = new Error('Not Found');
@@ -103,5 +107,11 @@ app.use(function(err, req, res, next) {
     });*/
 });
 
-
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) { return next(); }
+  res.status(403);
+  res.json({
+    error : 'User not logged in'
+  });
+}
 module.exports = app;
