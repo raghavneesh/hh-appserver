@@ -53,7 +53,7 @@ router.get('/verify',function(req, res, next){
 		      if (err) { return next(err); }
 		      // res.cookie('remember_me', token, { path: '/', httpOnly: true, maxAge: 604800000 }); // 7 days
 		      res.json({
-		      	token : token,
+		      	hhtoken : token,
 		      	user : user
 		      });
 		    });
