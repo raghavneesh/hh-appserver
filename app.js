@@ -26,6 +26,7 @@ global.isAuthenticated = ensureAuthenticated;
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var Token = require('./models/Token');
 
 var app = express();
 
@@ -53,14 +54,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(passport.authenticate('remember-me'));
+// app.use(modifyResponse);
 
 
 app.use(function(req, res, next){
-    res.locals.authenticated = req.isAuthenticated();
-    if(req.session.passport && req.session.passport.user){
-        res.locals.user = req.session.passport.user;
-    }
+    req.user = null;
     next();
 });
 
@@ -108,10 +106,35 @@ app.use(function(err, req, res, next) {
 });
 
 function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) { return next(); }
-  res.status(403);
-  res.json({
-    error : 'User not logged in'
-  });
+    var errorResponse = function(errorMessage){
+        res.status(403);
+        res.json({
+          error : errorMessage || 'User not logged in'
+        });
+    }, params = ((req.method === 'GET')? req.query: req.body);
+    if(params && params.hhtoken){
+        Token.getUser(params.hhtoken,function(err, user){
+            if(err){
+                return errorResponse(err.message || err);
+            } 
+            if(!user){
+                return errorResponse();
+            }
+            req.user = user;
+            next();
+        });
+    } else {
+        errorResponse();
+    }
+  
 }
+
+/*function modifyResponse(req, res, next){
+  res.on('send', function(){
+    console.log(res.body);
+  });
+
+  next();
+};*/
+
 module.exports = app;

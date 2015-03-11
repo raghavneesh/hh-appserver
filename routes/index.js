@@ -38,23 +38,26 @@ router.post('/authenticate',function(req,res,next){
 
 
 router.get('/verify',function(req, res, next){
-	passport.authenticate('local',function(err, user, info){
+	passport.authenticate('local',{session : false},function(err, user, info){
 		if(err){
 			return res.send({
 				error : err
 			});
 		}
-		 req.logIn(user,function(err){
+		 // req.logIn(user,function(err){
 		 	if(err){
 		 		return next(err);
 		 	}
 		 	var token = utilities.randomString(64);
-		    Token.save(token, req.user._id, function(err) {
+		    Token.save(token, user._id, function(err) {
 		      if (err) { return next(err); }
-		      res.cookie('remember_me', token, { path: '/', httpOnly: true, maxAge: 604800000 }); // 7 days
-		      res.json(user);
+		      // res.cookie('remember_me', token, { path: '/', httpOnly: true, maxAge: 604800000 }); // 7 days
+		      res.json({
+		      	token : token,
+		      	user : user
+		      });
 		    });
-		 });
+		 // });
 		
 	})(req, res, next);
 });

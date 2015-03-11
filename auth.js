@@ -55,7 +55,7 @@ module.exports = function(passport){
         User.findByIdentifier(identifier,done);
     });
 
-    passport.use(new RememberMeStrategy(
+    /*passport.use(new RememberMeStrategy(
       function(token, done) {
         Token.consume(token, function (err, user) {
           if (err) { return done(err); }
@@ -64,6 +64,6 @@ module.exports = function(passport){
         });
       },
       issueToken
-    ));
+    ));*/
 
 }
