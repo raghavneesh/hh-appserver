@@ -76,6 +76,7 @@ utils = {
 				case 1 : dateInfo.push(eventStartDate.month()); 
 				case 2 : dateInfo.push(eventStartDate.year());
 			}
+
 			return moment(dateInfo.reverse());
 		};
 
@@ -101,6 +102,7 @@ utils = {
 			return;
 		for(var i=0;i<formattedDates.length;i++){
 			var formattedDate = formattedDates[i];
+			console.log(formattedDate.format('YYYYMMDD'));
 			if(!formattedDate.isValid())
 				return ;
 			var timeStamp = formattedDate.valueOf(); //Get the date timestamp

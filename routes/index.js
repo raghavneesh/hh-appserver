@@ -62,5 +62,9 @@ router.get('/verify',function(req, res, next){
 	})(req, res, next);
 });
 
+router.get('/talk/types',function(req, res){
+	res.json(global.Event.talk.types);
+});
+
 
 module.exports = router;

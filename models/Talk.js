@@ -2,7 +2,6 @@ var mongoose = require('mongoose'),
 schema = mongoose.Schema,
 moment = require('moment'),
 utilities = require('../utils.js'),
-TALK_TYPES = ['workshop','talk','classroom'],
 //Define User schema
 Talk = new schema({
 	user : 'ObjectId',
@@ -26,7 +25,8 @@ Talk = new schema({
 Talk.methods.saveTalk = function(talkInfo,userId,done){
 	if(!talkInfo)
 		return done('No sufficient information.');
-	var _this = this;
+	var _this = this,
+	talkTypes = global.Event.talk.types;
 	if(talkInfo.title)
 		_this.title = talkInfo.title;
 	_this.description = talkInfo.description;
@@ -38,7 +38,7 @@ Talk.methods.saveTalk = function(talkInfo,userId,done){
 		return done('Date is not valid');
 	_this.duration = talkInfo.duration;
 	//Check types of talk
-	if(TALK_TYPES.indexOf(talkInfo.type) > -1)
+	if(talkTypes.indexOf(talkInfo.type) > -1)
 		_this.type = talkInfo.type;
 	else if(talkInfo.type) //if info has type of talk but not validated
 		return done('Not a valid type.');

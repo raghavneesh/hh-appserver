@@ -18,10 +18,8 @@ mongoose.connect(
         mongos : true
     });
 
-global.Event = {
-    startDate : applicationConfig.event.startDate,
-    endDate : applicationConfig.event.endDate
-};
+global.Event = applicationConfig.event;
+
 global.isAuthenticated = ensureAuthenticated;
 
 var routes = require('./routes/index');
