@@ -31,7 +31,7 @@ utils = {
 	    return re.test(email);
 	},
 	isValidPhone : function(phone){
-		var re = /^\+?([0-9]{2})\)?[-. ]?([0-9]{4})[-. ]?([0-9]{3})[-. ]?([0-9]{3})$/;
+		var re = /^(\+91-|\+91|0)?\d{10}$/;
 		return re.test(phone);
 	},
 	randomString : function(){
