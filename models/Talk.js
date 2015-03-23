@@ -31,12 +31,12 @@ Talk.methods.saveTalk = function(talkInfo,userId,done){
 		_this.title = talkInfo.title;
 	_this.description = talkInfo.description;
 
-	var dateTime = moment(talkInfo.datetime,'DD-MM-YYYY HH:mm');
-	if(dateTime.isValid())
+	var dateTime = moment(talkInfo.datetime,'YYYY-MM-DD HH:mm');
+	if(dateTime.isValid() && utilities.isEventDate(dateTime))
 		_this.date = dateTime.valueOf();
 	else
 		return done('Date is not valid');
-	_this.duration = talkInfo.duration;
+	/*_this.duration = talkInfo.duration;
 	//Check types of talk
 	if(talkTypes.indexOf(talkInfo.type) > -1)
 		_this.type = talkInfo.type;
@@ -46,7 +46,7 @@ Talk.methods.saveTalk = function(talkInfo,userId,done){
 	var location = utilities.getLocation(talkInfo.location);
 	if(location){
 		_this.location = location;
-	}
+	}*/
 	if(!_this.created_at)
 		_this.created_at = new Date().getTime();
 	else

@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router(),
+async = require('async'),
 utilities = require('../utils.js'),
 Booking = require('../models/Booking'),
 Talk = require('../models/Talk');
@@ -64,16 +65,48 @@ router.get('/reservedates',global.isAuthenticated, function(req, res){
 
 
 router.post('/talk/add', global.isAuthenticated, function(req, res){
-	var talk = new Talk();
-	talk.saveTalk(req.body, req.user._id, function(error, talk){
-		if(error){
+	if(req.body.talks){
+		try{
+			var talks = JSON.parse(req.body.talks),
+			userId = req.user._id;
+			if(!talks.length || !talks.splice){
+				throw 500;
+			}
+			//Save talks
+			async.mapSeries(talks,function(talkRequest, indCallback){
+				var talk = new Talk();
+				talk.saveTalk(talkRequest, userId, function(error, talk){
+					//If there is some error, 
+					//send this particular task with error message
+					if(error){
+						talk = {
+							error : error
+						};
+					}
+					indCallback(false, talk);
+				});
+			},function(error, results){
+				if(error){
+					res.status(500);
+					return res.json({
+						error : error
+					});
+				}
+				res.json(results);
+			});
+
+		} catch(err){
 			res.status(500);
 			return res.json({
-				error : error
+				error : 'Invalid talks request json'
 			});
 		}
-		res.json(talk);
-	});
+	} else {
+		res.status(400);
+		return res.json({
+			error : 'Invalid request'
+		});
+	}
 });
 router.get('/talk/:id', function(req, res){
 	var talkId = req.params.id;

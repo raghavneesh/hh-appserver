@@ -102,15 +102,21 @@ utils = {
 			return;
 		for(var i=0;i<formattedDates.length;i++){
 			var formattedDate = formattedDates[i];
-			console.log(formattedDate.format('YYYYMMDD'));
-			if(!formattedDate.isValid())
-				return ;
-			var timeStamp = formattedDate.valueOf(); //Get the date timestamp
-			if(timeStamp < Event.startDate || timeStamp > Event.endDate) //Compare dates
-				return;
-			eventDates.push(formattedDate.valueOf());
+			if(utils.isEventDate(formattedDate))
+				eventDates.push(formattedDate.valueOf());
 		}
 		return eventDates;
+	},
+	/*
+	* Check if moment date is valid and lies in events date range
+	*/
+	isEventDate : function(momentDate){
+		if(!momentDate.isValid())
+				return false;
+		var timeStamp = momentDate.valueOf(); //Get the date timestamp
+		if(timeStamp < Event.startDate || timeStamp > Event.endDate) //Compare dates
+			return false;
+		return true;
 	},
 	getLocation : function(locationString){
 		if(!locationString)
