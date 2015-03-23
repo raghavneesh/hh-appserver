@@ -34,8 +34,11 @@ Token.statics.getUser = function(token, done){
 		if(err){
 			return done(err);
 		}
+		if(!token){
+			return done({message : 'Token not found.'});
+		}
 		if(token.isExpired()){
-			return done('Token has expired');
+			return done({message : 'Token has expired'});
 		}
 		token.findUser(done);
 		token.accessed_at = new Date().getTime();

@@ -121,7 +121,16 @@ utils = {
 	getLocation : function(locationString){
 		if(!locationString)
 			return;
-		var location = {},
+		[
+    {
+      "title" : "Some Title 1",
+      "date" : "2015-05-23"
+    },
+    {
+      "title" : "Some Title 2",
+      "date" : "2015-05-24"
+    }
+  ]var location = {},
 		locationInfo = locationString.split('~');
 		location.name = locationInfo[0];
 		if(locationInfo.length > 2){
