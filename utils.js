@@ -43,9 +43,12 @@ utils = {
 		  }
 		  return buf.join('');
 	},
-	isValidDate : function(dateStr){
-		var dateReg = /^\d{2}([./-])\d{2}\1\d{4}$/;
-		return dateReg.test(dateStr);
+	isValidDate : function(dateStr, format){
+		if(!dateStr)
+			return false;
+		return moment(dateStr, format).isValid();
+		/*var dateReg = /^\d{2}([./-])\d{2}\1\d{4}$/;
+		return dateReg.test(dateStr);*/
 	},
 	validDates : function(dates,seperator){
 		if(typeof dates !== 'string' && typeof dates !== 'object')
@@ -54,7 +57,7 @@ utils = {
 			dates = dates.split(seperator || ',');
 
 		for(var i=0;i<dates.length;i++){
-			if(!utils.isValidDate(dates[i]))
+			if(!utils.isValidDate(dates[i]), 'DD-MM-yyyy')
 				return false;
 		}
 	},
@@ -121,16 +124,7 @@ utils = {
 	getLocation : function(locationString){
 		if(!locationString)
 			return;
-		[
-    {
-      "title" : "Some Title 1",
-      "date" : "2015-05-23"
-    },
-    {
-      "title" : "Some Title 2",
-      "date" : "2015-05-24"
-    }
-  ]var location = {},
+		var location = {},
 		locationInfo = locationString.split('~');
 		location.name = locationInfo[0];
 		if(locationInfo.length > 2){

@@ -1,9 +1,11 @@
 var express = require('express');
 var router = express.Router(),
 async = require('async'),
+moment = require('moment'),
 utilities = require('../utils.js'),
 Booking = require('../models/Booking'),
-Talk = require('../models/Talk');
+Talk = require('../models/Talk'),
+Accommodation = require('../models/Accommodation');
 
 /* GET users listing. */
 router.get('/', global.isAuthenticated, function(req, res) {
@@ -69,6 +71,7 @@ router.post('/talk/add', global.isAuthenticated, function(req, res){
 		try{
 			var talks = JSON.parse(req.body.talks),
 			userId = req.user._id;
+			return res.send('OK');
 			if(!talks.length || !talks.splice){
 				throw 500;
 			}
@@ -176,6 +179,49 @@ router.get('/talk/delete/:id',global.isAuthenticated, function(req, res){
 		res.json({
 			deleted : true
 		});
+	});
+});
+
+router.post('/accommodation',global.isAuthenticated,function(req, res){
+	if(!req.body.date || !utilities.isValidDate(req.body.date, 'DD-MM-yyyy') || !Accommodation.isValidType(req.body.type)){
+		res.status(400);
+		return res.json({
+			error : 'Invalid request'
+		});
+	}
+	var user = req.user;
+	Accommodation.findOne({
+		user : user._id
+	},function(error, accommodation){
+		if(error){
+			return next(error);
+		}
+		if(!accommodation)
+			accommodation = new Accommodation();
+		accommodation.type = req.body.type;
+		accommodation.startDate = moment(req.body.date, 'DD-MM-yyyy').valueOf();
+		accommodation.days = parseInt(req.body.days || '1', 10);
+		accommodation.beds = parseInt(req.body.beds || '1', 10);
+		accommodation.user = user._id;
+		accommodation.save();
+		return res.json(accommodation);
+	});
+});
+
+router.get('/accommodation',global.isAuthenticated,function(req, res){
+	var user = req.user;
+	Accommodation.findOne({
+		user : user._id
+	},function(error, accommodation){
+		if(error)
+			return next(error);
+		if(!accommodation){
+			res.status(404);
+			return res.json({
+				error : 'Accommodation not found'
+			});
+		}
+		return res.json(accommodation);
 	});
 });
 
