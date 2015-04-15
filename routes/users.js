@@ -69,9 +69,8 @@ router.get('/reservedates',global.isAuthenticated, function(req, res){
 router.post('/talk/add', global.isAuthenticated, function(req, res){
 	if(req.body.talks){
 		try{
-			var talks = JSON.parse(req.body.talks),
+			var talks = req.body.talks,
 			userId = req.user._id;
-			return res.send('OK');
 			if(!talks.length || !talks.splice){
 				throw 500;
 			}
