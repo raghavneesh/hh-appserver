@@ -5,7 +5,9 @@ moment = require('moment'),
 utilities = require('../utils.js'),
 Booking = require('../models/Booking'),
 Talk = require('../models/Talk'),
-Accommodation = require('../models/Accommodation');
+Accommodation = require('../models/Accommodation'),
+Pickup = require('../models/Pickup'),
+ObjectId = require('mongoose').Types.ObjectId;
 
 /* GET users listing. */
 router.get('/', global.isAuthenticated, function(req, res) {
@@ -112,6 +114,11 @@ router.post('/talk/add', global.isAuthenticated, function(req, res){
 });
 router.get('/talk/:id', function(req, res){
 	var talkId = req.params.id;
+	if(!ObjectId.isValid(talkId)){
+		return res.json({
+			error : 'Invalid Id'
+		});
+	}
 	Talk.findOne({
 		_id : talkId
 	},function(error, talk){
@@ -132,6 +139,11 @@ router.get('/talk/:id', function(req, res){
 
 router.post('/talk/edit/:id', global.isAuthenticated, function(req, res){
 	var talkId = req.params.id;
+	if(!ObjectId.isValid(talkId)){
+		return res.json({
+			error : 'Invalid Id'
+		});
+	}
 	Talk.findOne({
 		_id : talkId
 	},function(error, talk){
@@ -160,6 +172,11 @@ router.post('/talk/edit/:id', global.isAuthenticated, function(req, res){
 
 router.get('/talk/delete/:id',global.isAuthenticated, function(req, res){
 	var talkId = req.params.id;
+	if(!ObjectId.isValid(talkId)){
+		return res.json({
+			error : 'Invalid Id'
+		});
+	}
 	Talk.findOne({
 		_id : talkId
 	},function(error, talk){
@@ -221,6 +238,49 @@ router.get('/accommodation',global.isAuthenticated,function(req, res){
 			});
 		}
 		return res.json(accommodation);
+	});
+});
+
+router.post('/pickup',global.isAuthenticated,function(req, res){
+	if(!req.body.date || !utilities.isValidDate(req.body.date, 'DD-MM-yyyy') || !Pickup.isValidLocation(req.body.location)){
+		res.status(400);
+		return res.json({
+			error : 'Invalid request'
+		});
+	}
+	var user = req.user;
+	Pickup.findOne({
+		user : user._id
+	},function(error, pickup){
+		if(error){
+			return next(error);
+		}
+		if(!pickup)
+			pickup = new Pickup();
+		pickup.date = moment(req.body.date, 'DD-MM-yyyy').valueOf();
+		pickup.time = req.body.time;
+		pickup.seats = parseInt(req.body.seats || '1', 10);
+		pickup.location = req.body.location;
+		pickup.user = user._id;
+		pickup.save();
+		return res.json(pickup);
+	});
+});
+
+router.get('/pickup',global.isAuthenticated,function(req, res){
+	var user = req.user;
+	Pickup.findOne({
+		user : user._id
+	},function(error, pickup){
+		if(error)
+			return next(error);
+		if(!pickup){
+			res.status(404);
+			return res.json({
+				error : 'Pickup not found'
+			});
+		}
+		return res.json(pickup);
 	});
 });
 

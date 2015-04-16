@@ -69,5 +69,8 @@ router.get('/talk/types',function(req, res){
 router.get('/room/types',function(req, res){
 	res.json(global.Event.accommodation.types);
 });
+router.get('/locations',function(req, res){
+	res.json(global.Event.locations);
+});
 
 module.exports = router;

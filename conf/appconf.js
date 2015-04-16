@@ -12,6 +12,16 @@ exports.conf = {
 		},
 		"accommodation" : {
 			"types" : ["room", "tent", "bed"]
-		}
+		},
+		"locations" : [{
+			"name" : "Dharamsala Bus stand",
+			"value" : "dbus"
+		},{
+			"name" : "Macleod Gunj",
+			"value" : "mcleod"
+		},{
+			"name" : "Pathankot Railway Station",
+			"value" : "ptkt"
+		}]
 	}
 }
