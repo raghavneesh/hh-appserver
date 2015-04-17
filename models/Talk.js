@@ -32,14 +32,17 @@ Talk.methods.saveTalk = function(talkInfo,userId,done){
 		_this.title = talkInfo.title;
 	_this.description = talkInfo.description;
 	_this.requirements = talkInfo.requirements;
-	if(Talk.isValidType(talkInfo.type))
+
+	if(Talk.statics.isValidType(talkInfo.type))
 		_this.type = talkInfo.type;
-	else
+	else if(talkInfo.type)
 		return done('Not a valid Talk Type');
-	if(Talk.isValidEvent(talkInfo.event))
+	if(Talk.statics.isValidEvent(talkInfo.event))
 		_this.event = talkInfo.event;
-	else
+	else if(talkInfo.event)
 		return done('Not a valid Talk event');
+
+	_this.duration = talkInfo.duration;
 	/*var dateTime = moment(talkInfo.datetime,'YYYY-MM-DD HH:mm');
 	if(dateTime.isValid() && utilities.isEventDate(dateTime))
 		_this.date = dateTime.valueOf();

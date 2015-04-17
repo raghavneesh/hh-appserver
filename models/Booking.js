@@ -6,7 +6,9 @@ Booking = new schema({
 	user : 'ObjectId',
 	accommodation : Boolean,
 	pickup : Boolean,
-	dates : [Number]
+	arrival_date : Number,
+	departure_date : Number,
+	talk : Boolean
 });
 
 module.exports = mongoose.model('bookings',Booking);

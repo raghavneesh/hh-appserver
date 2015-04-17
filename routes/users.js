@@ -22,11 +22,13 @@ router.post('/reservedates', global.isAuthenticated ,function(req, res){
 	accommodation = !!req.body.accommodation,
 	pickup = !!req.body.pickup,
 	user = req.user,
-	eventDates = utilities.getEventAcceptableDates(datesString);
-	if(!eventDates || !eventDates.length){
+	arrivalDate = moment(req.body.arrival_date,'DD-MM-yyyy'),
+	departureDate = moment(req.body.departure_date,'DD-MM-yyyy');
+
+	if(!utilities.isEventDate(arrivalDate) || !utilities.isEventDate(departureDate)){
 		res.status(400);
 		return res.json({
-			error : 'Invalid request'
+			error : 'Not valid dates'
 		});
 	}
 	Booking.findOne({
@@ -37,10 +39,12 @@ router.post('/reservedates', global.isAuthenticated ,function(req, res){
 		}
 		if(!booking)
 			booking = new Booking(); //Create new booking
-
-		booking.dates = eventDates; //set dates
+		booking.arrival_date = arrivalDate.valueOf();
+		booking.departure_date = departureDate.valueOf();
+		/*booking.dates = eventDates; //set dates*/
 		booking.accommodation = !!(accommodation); //Set accommodation as boolean
 		booking.pickup = !!(pickup); //Set pickup as boolean
+		booking.talk = !!req.body.talk;
 		booking.user = user._id; //Set user id
 		booking.save(); //Saves
 		res.json(booking);
