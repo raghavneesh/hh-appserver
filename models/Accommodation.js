@@ -5,11 +5,12 @@ utilities = require('../utils.js'),
 Accommodation = new schema({
 	user : 'ObjectId',
 	type : 'String',
-	startDate : Number,
-	days : Number,
-	beds : Number,
+	tent : Boolean,
+	sleeping_bag : Boolean,
+	mat : Boolean,
+	pillow : Boolean,
 	family : Boolean,
-	description : String
+	family_details : String
 });
 
 Accommodation.statics.isValidType = function(accommodationStr){

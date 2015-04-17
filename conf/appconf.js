@@ -8,7 +8,8 @@ exports.conf = {
 		"startDate" : new Date("2015-05-20").getTime(),
 		"endDate" : new Date("2015-06-08").getTime(),
 		"talk" : {
-			"types" : ['workshop','talk','classroom']
+			"types" : ['talk','workshop','session'],
+			"events" : ['codecamp', 'schoolprogram', 'unconference', 'mainconference']
 		},
 		"accommodation" : {
 			"types" : ["pillow", "mat", "sleepingbag","tent"]

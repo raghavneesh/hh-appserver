@@ -19,8 +19,8 @@ router.post('/reservedates', global.isAuthenticated ,function(req, res){
 	var datesString = req.body.dates,
 	eventStartDate = Event.startDate, //Event start Date
 	eventEndDate = Event.endDate, //Event end date
-	accommodation = parseInt(req.body.accommodation || '0',10),
-	pickup = parseInt(req.body.pickup || '0',10),
+	accommodation = !!req.body.accommodation,
+	pickup = !!req.body.pickup,
 	user = req.user,
 	eventDates = utilities.getEventAcceptableDates(datesString);
 	if(!eventDates || !eventDates.length){
@@ -199,12 +199,12 @@ router.get('/talk/delete/:id',global.isAuthenticated, function(req, res){
 });
 
 router.post('/accommodation',global.isAuthenticated,function(req, res){
-	if(!req.body.date || !utilities.isValidDate(req.body.date, 'DD-MM-yyyy') || !Accommodation.isValidType(req.body.type)){
+	/*if(!req.body.date || !utilities.isValidDate(req.body.date, 'DD-MM-yyyy') || !Accommodation.isValidType(req.body.type)){
 		res.status(400);
 		return res.json({
 			error : 'Invalid request'
 		});
-	}
+	}*/
 	var user = req.user;
 	Accommodation.findOne({
 		user : user._id
@@ -214,12 +214,18 @@ router.post('/accommodation',global.isAuthenticated,function(req, res){
 		}
 		if(!accommodation)
 			accommodation = new Accommodation();
-		accommodation.type = req.body.type;
+		accommodation.tent = !!req.body.tent;
+		accommodation.sleeping_bag = !!req.body.sleeping_bag;
+		accommodation.mat = !!req.body.mat;
+		accommodation.pillow = !!req.body.pillow;
+		accommodation.family = !!req.body.family;
+		accommodation.family_details = req.body.family_details;
+		/*accommodation.type = req.body.type;
 		accommodation.startDate = moment(req.body.date, 'DD-MM-yyyy').valueOf();
 		accommodation.days = req.body.days || 1;
 		accommodation.beds = req.body.beds || 1;
 		accommodation.description = req.body.description;
-		accommodation.family = !!req.body.family;
+		accommodation.family = !!req.body.family;*/
 		accommodation.user = user._id;
 		accommodation.save();
 		return res.json(accommodation);

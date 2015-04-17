@@ -10,6 +10,8 @@ Talk = new schema({
 	date : Number,
 	duration : String,
 	type : String,
+	event : String,
+	requirements : String,
 	location : {
 		name : String,
 		lat : Number,
@@ -25,12 +27,19 @@ Talk = new schema({
 Talk.methods.saveTalk = function(talkInfo,userId,done){
 	if(!talkInfo)
 		return done('No sufficient information.');
-	var _this = this,
-	talkTypes = global.Event.talk.types;
+	var _this = this;
 	if(talkInfo.title)
 		_this.title = talkInfo.title;
 	_this.description = talkInfo.description;
-
+	_this.requirements = talkInfo.requirements;
+	if(Talk.isValidType(talkInfo.type))
+		_this.type = talkInfo.type;
+	else
+		return done('Not a valid Talk Type');
+	if(Talk.isValidEvent(talkInfo.event))
+		_this.event = talkInfo.event;
+	else
+		return done('Not a valid Talk event');
 	/*var dateTime = moment(talkInfo.datetime,'YYYY-MM-DD HH:mm');
 	if(dateTime.isValid() && utilities.isEventDate(dateTime))
 		_this.date = dateTime.valueOf();
@@ -57,6 +66,13 @@ Talk.methods.saveTalk = function(talkInfo,userId,done){
 			return done('Error while saving talk for user ' + userId);
 		done(false, _this);
 	});
+}
+
+Talk.statics.isValidType = function(typeString){
+	return (global.Event.talk.types.indexOf(typeString) > -1);
+}
+Talk.statics.isValidEvent = function(eventType){
+	return (global.Event.talk.events.indexOf(eventType) > -1);
 }
 
 module.exports = mongoose.model('talks',Talk);
