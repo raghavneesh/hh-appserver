@@ -216,8 +216,10 @@ router.post('/accommodation',global.isAuthenticated,function(req, res){
 			accommodation = new Accommodation();
 		accommodation.type = req.body.type;
 		accommodation.startDate = moment(req.body.date, 'DD-MM-yyyy').valueOf();
-		accommodation.days = parseInt(req.body.days || '1', 10);
-		accommodation.beds = parseInt(req.body.beds || '1', 10);
+		accommodation.days = req.body.days || 1;
+		accommodation.beds = req.body.beds || 1;
+		accommodation.description = req.body.description;
+		accommodation.family = !!req.body.family;
 		accommodation.user = user._id;
 		accommodation.save();
 		return res.json(accommodation);

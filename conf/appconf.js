@@ -11,17 +11,20 @@ exports.conf = {
 			"types" : ['workshop','talk','classroom']
 		},
 		"accommodation" : {
-			"types" : ["room", "tent", "bed"]
+			"types" : ["pillow", "mat", "sleepingbag","tent"]
 		},
 		"locations" : [{
 			"name" : "Dharamsala Bus stand",
-			"value" : "dbus"
+			"value" : "dbus",
+			"charge" : 250
 		},{
 			"name" : "Macleod Gunj",
-			"value" : "mcleod"
+			"value" : "mcleod",
+			"charge" : 350
 		},{
 			"name" : "Pathankot Railway Station",
-			"value" : "ptkt"
+			"value" : "ptkt",
+			"charge" : 1000
 		}]
 	}
 }

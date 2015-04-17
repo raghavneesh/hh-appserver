@@ -31,11 +31,11 @@ Talk.methods.saveTalk = function(talkInfo,userId,done){
 		_this.title = talkInfo.title;
 	_this.description = talkInfo.description;
 
-	var dateTime = moment(talkInfo.datetime,'YYYY-MM-DD HH:mm');
+	/*var dateTime = moment(talkInfo.datetime,'YYYY-MM-DD HH:mm');
 	if(dateTime.isValid() && utilities.isEventDate(dateTime))
 		_this.date = dateTime.valueOf();
 	else
-		return done('Date is not valid');
+		return done('Date is not valid');*/
 	/*_this.duration = talkInfo.duration;
 	//Check types of talk
 	if(talkTypes.indexOf(talkInfo.type) > -1)

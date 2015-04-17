@@ -7,7 +7,9 @@ Accommodation = new schema({
 	type : 'String',
 	startDate : Number,
 	days : Number,
-	beds : Number
+	beds : Number,
+	family : Boolean,
+	description : String
 });
 
 Accommodation.statics.isValidType = function(accommodationStr){
