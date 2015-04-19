@@ -11,12 +11,15 @@ Talk = new schema({
 	duration : String,
 	type : String,
 	event : String,
-	requirements : String,
+	notes : String,
 	location : {
 		name : String,
 		lat : Number,
 		lng : Number
 	},
+	hasCoPresenters : Boolean,
+	needsProjector : Boolean,
+	needsTools : Boolean,
 	created_at : Number,
 	updated_at : Number
 });
@@ -30,8 +33,7 @@ Talk.methods.saveTalk = function(talkInfo,userId,done){
 	var _this = this;
 	if(talkInfo.title)
 		_this.title = talkInfo.title;
-	_this.description = talkInfo.description;
-	_this.requirements = talkInfo.requirements;
+	_this.notes = talkInfo.notes;
 
 	if(Talk.statics.isValidType(talkInfo.type))
 		_this.type = talkInfo.type;
@@ -43,6 +45,9 @@ Talk.methods.saveTalk = function(talkInfo,userId,done){
 		return done('Not a valid Talk event');
 
 	_this.duration = talkInfo.duration;
+	_this.hasCoPresenters = !!talkInfo.hasCoPresenters;
+	_this.needsProjector = !!talkInfo.needsProjector;
+	_this.needsTools = !!talkInfo.needsTools;
 	/*var dateTime = moment(talkInfo.datetime,'YYYY-MM-DD HH:mm');
 	if(dateTime.isValid() && utilities.isEventDate(dateTime))
 		_this.date = dateTime.valueOf();
