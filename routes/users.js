@@ -254,7 +254,7 @@ router.get('/accommodation',global.isAuthenticated,function(req, res){
 });
 
 router.post('/pickup',global.isAuthenticated,function(req, res){
-	if(!req.body.date || !utilities.isValidDate(req.body.date, 'DD-MM-yyyy') || !Pickup.isValidLocation(req.body.location)){
+	if(!req.body.date || !utilities.isValidDate(req.body.date, 'DD-MM-yyyy')){
 		res.status(400);
 		return res.json({
 			error : 'Invalid request'
@@ -264,6 +264,7 @@ router.post('/pickup',global.isAuthenticated,function(req, res){
 	Pickup.findOne({
 		user : user._id
 	},function(error, pickup){
+	        var location_string = "";
 		if(error){
 			return next(error);
 		}
@@ -272,7 +273,8 @@ router.post('/pickup',global.isAuthenticated,function(req, res){
 		pickup.date = moment(req.body.date, 'DD-MM-yyyy').valueOf();
 		pickup.time = req.body.time;
 		pickup.seats = parseInt(req.body.seats || '1', 10);
-		pickup.location = req.body.location;
+	        location_string = req.body.location.toString().split("\n");
+		pickup.location = location_string[0];
 		pickup.user = user._id;
 		pickup.save();
 		return res.json(pickup);

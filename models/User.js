@@ -1,6 +1,7 @@
 var mongoose = require('mongoose'),
 schema = mongoose.Schema,
 utilities = require('../utils.js'),
+twilio = require('twilio')('account_sid', 'account_auth'),
 //Define User schema
 User = new schema({
 	email : 'String',
@@ -13,6 +14,10 @@ User = new schema({
 	isVerified : 'Boolean',
 	verifier : 'String'
 }),
+phoneVerifcationSchema = new schema({},{
+	strict : false
+}),
+PhoneVerification = mongoose.model('phoneverifcation',phoneVerifcationSchema),
 getVerifier = function(){
 	return Math.floor(100000 + Math.random() * 900000);
 };
@@ -138,6 +143,7 @@ User.statics.addUser = function(profile,done){
 	});
 };
 User.methods.sendVerification = function(){
+	var _this = this;
 	this.isVerified = false;
 	this.verifier = getVerifier();
 	this.save();
@@ -148,7 +154,22 @@ User.methods.sendVerification = function(){
 			to : this.email,
 			text : 'Verification code for hillhacks is ' + this.verifier
 		});	
-	}
+	} 
+	/*else {
+		twilio.sendMessage({
+			to : this.phone,
+			from : '+12028001819',
+			body : 'Verification code for hillhacks is ' + this.verifier
+		},function(err, responseData){
+			var phoneVerficationRespone = new PhoneVerification();
+			phoneVerficationRespone.error = err;
+			phoneVerficationRespone.response = responseData;
+			phoneVerficationRespone.user = _this._id;
+			phoneVerficationRespone.save();
+			console.log('Error : ' + JSON.stringify(err));
+			console.log('response: ' + JSON.stringify(responseData));
+		})
+	}*/
 	
 }
 

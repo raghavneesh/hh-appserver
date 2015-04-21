@@ -34,16 +34,8 @@ Talk.methods.saveTalk = function(talkInfo,userId,done){
 	if(talkInfo.title)
 		_this.title = talkInfo.title;
 	_this.notes = talkInfo.notes;
-
-	if(Talk.statics.isValidType(talkInfo.type))
-		_this.type = talkInfo.type;
-	else if(talkInfo.type)
-		return done('Not a valid Talk Type');
-	if(Talk.statics.isValidEvent(talkInfo.event))
-		_this.event = talkInfo.event;
-	else if(talkInfo.event)
-		return done('Not a valid Talk event');
-
+	_this.type = talkInfo.type;	
+	_this.event = talkInfo.event;
 	_this.duration = talkInfo.duration;
 	_this.hasCoPresenters = !!talkInfo.hasCoPresenters;
 	_this.needsProjector = !!talkInfo.needsProjector;
