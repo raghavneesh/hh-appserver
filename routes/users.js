@@ -46,6 +46,7 @@ router.post('/reservedates', global.isAuthenticated ,function(req, res){
 		booking.pickup = !!(pickup); //Set pickup as boolean
 		booking.talk = !!req.body.talk;
 		booking.user = user._id; //Set user id
+		booking.username = req.body.username;
 		booking.save(); //Saves
 		res.json(booking);
 	});

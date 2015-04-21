@@ -8,7 +8,8 @@ Booking = new schema({
 	pickup : Boolean,
 	arrival_date : Number,
 	departure_date : Number,
-	talk : Boolean
+	talk : Boolean,
+	username : String
 });
 
 module.exports = mongoose.model('bookings',Booking);
