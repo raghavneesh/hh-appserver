@@ -100,7 +100,9 @@ router.post('/talk/add', global.isAuthenticated, function(req, res){
 						error : error
 					});
 				}
-				res.json(results);
+				res.json({
+					talks : results
+				});
 			});
 
 		} catch(err){

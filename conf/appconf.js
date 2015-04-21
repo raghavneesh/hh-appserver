@@ -5,7 +5,7 @@ exports.conf = {
 		"port" : 27017
 	},
 	"event" : {
-		"startDate" : new Date("2015-05-20").getTime(),
+		"startDate" : new Date("2015-05-06").getTime(),
 		"endDate" : new Date("2015-06-08").getTime(),
 		"talk" : {
 			"types" : ['talk','workshop','session'],
