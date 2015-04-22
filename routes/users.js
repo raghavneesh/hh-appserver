@@ -119,7 +119,8 @@ router.post('/talk/add', global.isAuthenticated, function(req, res){
 					});
 				}
 				res.json({
-					talks : results
+				    // talks : results
+				    'talks' : results
 				});
 			});
 
