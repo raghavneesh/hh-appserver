@@ -357,7 +357,6 @@ router.get('/summary/:id',function(req, res){
 				error : 'Error fetching summary'
 			});
 		}
-	    console.log(user);
 		async.parallel({
 			booking : function(callback){
 				Booking.findOne({
@@ -436,6 +435,10 @@ router.get('/summary/:id',function(req, res){
 
 		       res.send(response);
 		});
+
+	    /**
+	     * These changes were implemented by Avneesh but has been commented out for now 
+	     */
 /*			var getDate = function(dateTimestamp){
 				if(!dateTimestamp)
 					return '';
