@@ -2,10 +2,10 @@ exports.conf = {
 	"db" : {
 		"name" : "hillhacks",
 		"host" : "localhost",
-		"port" : 27017
+		"port" : 3649
 	},
 	"event" : {
-		"startDate" : new Date("2015-05-06").getTime(),
+		"startDate" : new Date("2015-05-01").getTime(),
 		"endDate" : new Date("2015-06-08").getTime(),
 		"talk" : {
 			"types" : ['talk','workshop','session'],
