@@ -23,6 +23,8 @@
     "passport-remember-me": "0.0.1",
     "shortid": "^2.1.3",
     "static-favicon": "~1.0.0",
-    "twilio": "^2.0.0"
+    "twilio": "^2.0.0",
+    "node-json-rpc": "0.0.1",
+    "jsonrpc2": "~0.1.1"
   }
 }
