@@ -296,6 +296,7 @@ router.post('/pickup',global.isAuthenticated,function(req, res){
 		pickup.seats = parseInt(req.body.seats || '1', 10);
 	        location_string = req.body.location.toString().split("\n");
 		pickup.location = location_string[0];
+	        pickup.price = Number(location_string[1].match(/(\d+)/)[0]);
 		pickup.user = user._id;
 		pickup.save();
 		return res.json(pickup);
@@ -331,11 +332,11 @@ router.post('/confirm', global.isAuthenticated, function(req, res){
 			if(err){
 				res.status(500);
 				res.json({
-					confirmed : false
+					"error" : "An internal error occurred"
 				})
 			}
 			return res.json({
-				confirmed : true
+				confirmed : req.body.confirmed
 			});
 		});
 
@@ -343,12 +344,12 @@ router.post('/confirm', global.isAuthenticated, function(req, res){
 });
 router.get('/summary/:id',function(req, res){
 	var userId = req.params.id;
-	if(!ObjectId.isValid(userId)){
+	if(!utilities.isValidEmail(userId)){
 		res.status(400);
 		return res.json('Invalid user Id');
 	}
 	User.findOne({
-		_id : userId
+	    "email" : userId
 	},function(err, user){
 		if(err || !user){
 			res.status(500);
@@ -356,30 +357,33 @@ router.get('/summary/:id',function(req, res){
 				error : 'Error fetching summary'
 			});
 		}
+	    console.log(user);
 		async.parallel({
 			booking : function(callback){
 				Booking.findOne({
 					user : user._id
-				},'-user -id -__v',callback)
+				},'-user -_id -__v',callback)
 			},
 			pickup : function(callback){
 				Pickup.findOne({
 					user : user._id
-				},'-user -id -__v',callback);
+				},'-user -_id -__v',callback);
 			},
 			accommodation : function(callback){
 				Accommodation.findOne({
 					user : user._id
-				},'-user -id -__v',callback)
+				},'-user -_id -__v',callback)
 			}
 		},function(err, results){
 			if(err){
 				res.status(500);
 				return res.json('Error while fetching summary');
 			}
-			/*if(results.booking){
-				console.log(results.booking.user);
-				delete results.booking.user;
+
+
+			if(results.booking){
+//				console.log(results.booking.user);
+				delete results.booking.user; 
 			}
 			if(results.pickup)
 				delete results.pickup.user;
@@ -387,22 +391,52 @@ router.get('/summary/:id',function(req, res){
 				"identifier": user.email || user.phone
 			};
 
-			if(results.booking.username)
+			if(results.booking.username) {
 				response.username = results.booking.username;
-			if(results.booking)
-				response.attendance = [results.booking];
-			if(results.pickup)
-				response.pickup = [results.pickup];
-			if(results.accommodation)
-				response.accommodation = [results.accommodation];
+			}
+		    
+			if(results.booking) {
+			    var bookingJSON = results.booking.toJSON();
+
+			    bookingJSON.talk = bookingJSON.talk ? 1 : 0;
+			    bookingJSON.pickup = bookingJSON.pickup ? 1 : 0;
+			    bookingJSON.accommodation = bookingJSON.accommodation ? 1 : 0;
+			    bookingJSON.departure_date = moment(bookingJSON.departure_date).format('DD-MM-YYYY');
+			    bookingJSON.arrival_date = moment(bookingJSON.arrival_date).format('DD-MM-YYYY');
+			    
+			    delete bookingJSON.username;
+
+			    response.attendance = [bookingJSON];
+			}
+			if(results.pickup) {
+			    var pickupJSON = results.pickup.toJSON();
+			    
+			    pickupJSON.date = moment(pickupJSON.date).format('DD-MM-YYYY');
+			    pickupJSON.location = pickupJSON.location+"\nFare: Rs "+pickupJSON.price;
+			    
+			    delete pickupJSON.price;
+
+			    response.pickup = [pickupJSON];
+			}
+			if(results.accommodation) {
+			    var accommodationJSON = results.accommodation.toJSON();
+
+			    accommodationJSON.family = accommodationJSON.family ? 1 : 0;
+			    accommodationJSON.pillow = accommodationJSON.pillow ? 1 : 0;
+			    accommodationJSON.mat = accommodationJSON.mat ? 1 : 0;
+			    accommodationJSON.sleeping_bag = accommodationJSON.sleeping_bag ? 1 : 0;
+			    accommodationJSON.tent = accommodationJSON.tent ? 1 : 0;
+
+			    response.accommodation = [accommodationJSON];
+			}
 			if(user.talks)
 				response.talks = user.talks;
-			if(user.confirmed)
-				response.confirmed = user.confirmed;
 
-			res.send(response);*/
+		       response.confirmed = user.confirmed ? 1 : 0;
 
-			var getDate = function(dateTimestamp){
+		       res.send(response);
+		});
+/*			var getDate = function(dateTimestamp){
 				if(!dateTimestamp)
 					return '';
 				return moment(dateTimestamp).format('DD-MM-YYYY');
@@ -438,7 +472,7 @@ router.get('/summary/:id',function(req, res){
 			};
 
 			res.json(response);
-	});
+	});*/
 	
 		
 	})
