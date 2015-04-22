@@ -2,7 +2,7 @@ exports.conf = {
 	"db" : {
 		"name" : "hillhacks",
 		"host" : "localhost",
-		"port" : 3649
+		"port" : 27017
 	},
 	"event" : {
 		"startDate" : new Date("2015-05-01").getTime(),
