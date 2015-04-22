@@ -377,7 +377,7 @@ router.get('/summary/:id',function(req, res){
 				res.status(500);
 				return res.json('Error while fetching summary');
 			}
-			if(results.booking){
+			/*if(results.booking){
 				console.log(results.booking.user);
 				delete results.booking.user;
 			}
@@ -400,48 +400,47 @@ router.get('/summary/:id',function(req, res){
 			if(user.confirmed)
 				response.confirmed = user.confirmed;
 
-			res.send(response);
+			res.send(response);*/
+
+			var getDate = function(dateTimestamp){
+				if(!dateTimestamp)
+					return '';
+				return moment(dateTimestamp).format('DD-MM-YYYY');
+			};
+			var response = {
+				"identifier": user.email || user.phone, 
+				"username": (results.booking && results.booking.username) || '',
+				"attendance": [{
+			    "arrival_date": getDate(results.booking && results.booking.arrival_date),
+			    "departure_date": getDate(results.booking && results.booking.departure_date),
+			    "pickup": Number(results.booking && results.booking.pickup),
+			    "accommodation": Number(results.booking && results.booking.accommodation),
+			    "talk": Number(results.booking && results.booking.talk)
+			  }],
+				"accommodation": [
+				  {
+				    "tent": Number(results.accommodation && results.accommodation.tent),
+				    "sleeping_bag": Number(results.accommodation && results.accommodation.sleeping_bag),
+				    "mat": Number(results.accommodation && results.accommodation.mat),
+				    "pillow": Number(results.accommodation && results.accommodation.pillow),
+				    "family": Number(results.accommodation && results.accommodation.family),
+				    "family_details": (results.accommodation && results.accommodation.family_details) || ''
+				  }
+				],
+				"pickup": [{
+				    "location": (results.pickup && results.pickup.location) || '',
+				    "date": getDate(results.pickup && results.pickup.date),
+				    "seats": (results.pickup && results.pickup.seats) || '',
+				    "time": (results.pickup && results.pickup.time) || ''
+				  }],
+				"talks": [user.talks],
+				"confirmed": Number(user.confirmed)
+			};
+
+			res.json(response);
 	});
 	
-		/*var response = {
-			"identifier": results.user.email || results.user.phone, 
-			"username": results.booking.username,
-			"attendance": [results.booking],
-			"accommodation": [
-			  {
-			    "tent": 0,
-			    "sleeping_bag": 1,
-			    "mat": 0,
-			    "pillow": 1,
-			    "family": 1,
-			    "family_details": "Some text about the family details"
-			  }
-			],
-			"pickup": [results.pickup],
-			"talks": [
-			  {
-			    "title": "Some Title 1",
-			    "type": "Workshop",
-			    "event": "CodeCamp",
-			    "duration": "2 hours",
-			    "hasCoPresenters": 0,
-			    "needsProjector": 1,
-			    "needsTools": 0,
-			    "notes": "Some note regarding talk 1"
-			  },
-			  {
-			    "title": "Some Title 2",
-			    "type": "Talk",
-			    "event": "Main Conference",
-			    "duration": "1 week",
-			    "hasCoPresenters": 1,
-			    "needsProjector": 1,
-			    "needsTools": 0,
-			    "notes": "Some note regarding talk 2"
-			  }
-			],
-			"confirmed": 1
-			}*/
+		
 	})
 });
 module.exports = router;
