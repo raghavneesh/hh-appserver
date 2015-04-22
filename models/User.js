@@ -12,7 +12,9 @@ User = new schema({
 	last_login : 'Number',
 	oauth : 'Mixed',
 	isVerified : 'Boolean',
-	verifier : 'String'
+	verifier : 'String',
+	talks : 'Mixed',
+	confirmed : Boolean
 }),
 phoneVerifcationSchema = new schema({},{
 	strict : false
@@ -201,6 +203,16 @@ User.statics.findByIdentifier = function(emailOrPhone, done){
 			phone : emailOrPhone
 		}]
 	}]},done);
+}
+
+User.methods.saveTalks = function(talks,done){
+	this.talks = talks;
+	this.save(done);
+}
+
+User.methods.setConfirmed = function(confirmValue, done){
+	this.confirmed = !!confirmValue;
+	this.save(done);
 }
 
 

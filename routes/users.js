@@ -3,6 +3,7 @@ var router = express.Router(),
 async = require('async'),
 moment = require('moment'),
 utilities = require('../utils.js'),
+User = require('../models/User'),
 Booking = require('../models/Booking'),
 Talk = require('../models/Talk'),
 Accommodation = require('../models/Accommodation'),
@@ -75,7 +76,23 @@ router.get('/reservedates',global.isAuthenticated, function(req, res){
 
 router.post('/talk/add', global.isAuthenticated, function(req, res){
 	if(req.body.talks){
-		try{
+		var userId = req.user._id,
+		talks = req.body.talks;
+		if(!talks.length || !talks.splice)
+			throw 500;
+		User.findOne({
+			_id : userId
+		},function(err, user){
+			if(!user)
+				throw 500;
+			user.saveTalks(talks,function(){
+				res.json({
+					talks : talks
+				});
+			});
+			
+		});
+		/*try{
 			var talks = req.body.talks,
 			userId = req.user._id;
 			if(!talks.length || !talks.splice){
@@ -111,7 +128,7 @@ router.post('/talk/add', global.isAuthenticated, function(req, res){
 			return res.json({
 				error : 'Invalid talks request json'
 			});
-		}
+		}*/
 	} else {
 		res.status(400);
 		return res.json({
@@ -301,4 +318,118 @@ router.get('/pickup',global.isAuthenticated,function(req, res){
 	});
 });
 
+router.post('/confirm', global.isAuthenticated, function(req, res){
+	var user = req.user;
+	User.findOne({
+		_id : user._id
+	},function(err, user){
+		if(!user){
+			return res.status(500);
+		}
+		user.setConfirmed(req.body.confirmed,function(err){
+			if(err){
+				res.status(500);
+				res.json({
+					confirmed : false
+				})
+			}
+			return res.json({
+				confirmed : true
+			});
+		});
+
+	});
+});
+router.get('/summaries',global.isAuthenticated,function(req, res){
+	var user = req.user;
+	async.parallel({
+		user : function(callback){
+			User.findOne({
+				_id : user._id
+			},callback);
+		},
+		booking : function(callback){
+			Booking.findOne({
+				user : user._id
+			},'-user -id -__v',callback)
+		},
+		pickup : function(callback){
+			Pickup.findOne({
+				user : user._id
+			},'-user -id -__v',callback);
+		},
+		accommodation : function(callback){
+			Accommodation.findOne({
+				user : user._id
+			},'-user -id -__v',callback)
+		}
+	},function(err, results){
+		if(err){
+			res.status(500);
+			return res.json('Error while fetching summary');
+		}
+		if(results.booking){
+			console.log(results.booking.user);
+			delete results.booking.user;
+		}
+		if(results.pickup)
+			delete results.pickup.user;
+		var response = {
+			"identifier": results.user.email || results.user.phone
+		};
+
+		if(results.booking.username)
+			response.username = results.booking.username;
+		if(results.booking)
+			response.attendance = [results.booking];
+		if(results.pickup)
+			response.pickup = [results.pickup];
+		if(results.accommodation)
+			response.accommodation = [results.accommodation];
+		if(results.user.talks)
+			response.talks = results.user.talks;
+		if(results.user.confirmed)
+			response.confirmed = results.user.confirmed;
+		/*var response = {
+			"identifier": results.user.email || results.user.phone, 
+			"username": results.booking.username,
+			"attendance": [results.booking],
+			"accommodation": [
+			  {
+			    "tent": 0,
+			    "sleeping_bag": 1,
+			    "mat": 0,
+			    "pillow": 1,
+			    "family": 1,
+			    "family_details": "Some text about the family details"
+			  }
+			],
+			"pickup": [results.pickup],
+			"talks": [
+			  {
+			    "title": "Some Title 1",
+			    "type": "Workshop",
+			    "event": "CodeCamp",
+			    "duration": "2 hours",
+			    "hasCoPresenters": 0,
+			    "needsProjector": 1,
+			    "needsTools": 0,
+			    "notes": "Some note regarding talk 1"
+			  },
+			  {
+			    "title": "Some Title 2",
+			    "type": "Talk",
+			    "event": "Main Conference",
+			    "duration": "1 week",
+			    "hasCoPresenters": 1,
+			    "needsProjector": 1,
+			    "needsTools": 0,
+			    "notes": "Some note regarding talk 2"
+			  }
+			],
+			"confirmed": 1
+			}*/
+		res.send(response);
+	})
+});
 module.exports = router;
