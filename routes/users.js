@@ -341,56 +341,68 @@ router.post('/confirm', global.isAuthenticated, function(req, res){
 
 	});
 });
-router.get('/summaries',global.isAuthenticated,function(req, res){
-	var user = req.user;
-	async.parallel({
-		user : function(callback){
-			User.findOne({
-				_id : user._id
-			},callback);
-		},
-		booking : function(callback){
-			Booking.findOne({
-				user : user._id
-			},'-user -id -__v',callback)
-		},
-		pickup : function(callback){
-			Pickup.findOne({
-				user : user._id
-			},'-user -id -__v',callback);
-		},
-		accommodation : function(callback){
-			Accommodation.findOne({
-				user : user._id
-			},'-user -id -__v',callback)
-		}
-	},function(err, results){
-		if(err){
+router.get('/summary/:id',function(req, res){
+	var userId = req.params.id;
+	if(!ObjectId.isValid(userId)){
+		res.status(400);
+		return res.json('Invalid user Id');
+	}
+	User.findOne({
+		_id : userId
+	},function(err, user){
+		if(err || !user){
 			res.status(500);
-			return res.json('Error while fetching summary');
+			return res.json({
+				error : 'Error fetching summary'
+			});
 		}
-		if(results.booking){
-			console.log(results.booking.user);
-			delete results.booking.user;
-		}
-		if(results.pickup)
-			delete results.pickup.user;
-		var response = {
-			"identifier": results.user.email || results.user.phone
-		};
+		async.parallel({
+			booking : function(callback){
+				Booking.findOne({
+					user : user._id
+				},'-user -id -__v',callback)
+			},
+			pickup : function(callback){
+				Pickup.findOne({
+					user : user._id
+				},'-user -id -__v',callback);
+			},
+			accommodation : function(callback){
+				Accommodation.findOne({
+					user : user._id
+				},'-user -id -__v',callback)
+			}
+		},function(err, results){
+			if(err){
+				res.status(500);
+				return res.json('Error while fetching summary');
+			}
+			if(results.booking){
+				console.log(results.booking.user);
+				delete results.booking.user;
+			}
+			if(results.pickup)
+				delete results.pickup.user;
+			var response = {
+				"identifier": user.email || user.phone
+			};
 
-		if(results.booking.username)
-			response.username = results.booking.username;
-		if(results.booking)
-			response.attendance = [results.booking];
-		if(results.pickup)
-			response.pickup = [results.pickup];
-		if(results.accommodation)
-			response.accommodation = [results.accommodation];
-		if(results.user.talks)
-			response.talks = results.user.talks;
-		if(results.user.confirmed)
-			response.confirmed = results.user.confirmed;
+			if(results.booking.username)
+				response.username = results.booking.username;
+			if(results.booking)
+				response.attendance = [results.booking];
+			if(results.pickup)
+				response.pickup = [results.pickup];
+			if(results.accommodation)
+				response.accommodation = [results.accommodation];
+			if(user.talks)
+				response.talks = user.talks;
+			if(user.confirmed)
+				response.confirmed = user.confirmed;
+
+			res.send(response);
+	});
+	
 		/*var response = {
 			"identifier": results.user.email || results.user.phone, 
 			"username": results.booking.username,
@@ -430,7 +442,6 @@ router.get('/summaries',global.isAuthenticated,function(req, res){
 			],
 			"confirmed": 1
 			}*/
-		res.send(response);
 	})
 });
 module.exports = router;
