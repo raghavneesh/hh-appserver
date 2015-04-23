@@ -173,7 +173,7 @@ User.methods.sendVerification = function(){
 	if(this.email){
 		//Send verification email
 		utilities.sendHHEmail({
-			from : 'Hillhacks 2015 <hh-app@@zyx.in>',
+			from : 'Hillhacks 2015 <hh-app@zyx.in>',
 			to : this.email,
 			'reply-to' : 'mail@hillhacks.in',
 			subject : 'Hillhacks Verification Code',
