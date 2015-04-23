@@ -460,7 +460,7 @@ router.get('/summary/:id',function(req, res){
 				talksJSONArray[i] = talkJSON;
 			    }
 
-			    response.talks = user.talks;
+			    response.talks = talksJSONArray;
 			}
 		        else {
 			    response.talks = [];
