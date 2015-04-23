@@ -76,65 +76,63 @@ router.get('/reservedates',global.isAuthenticated, function(req, res){
 
 router.post('/talk/add', global.isAuthenticated, function(req, res){
 	if(req.body.talks){
-		var userId = req.user._id,
-		talks = req.body.talks;
-		if(!talks.length || !talks.splice)
-			throw 500;
-		User.findOne({
-			_id : userId
-		},function(err, user){
-			if(!user)
-				throw 500;
-			user.saveTalks(talks,function(){
-				res.json({
-					talks : talks
-				});
-			});
-			
-		});
-		/*try{
-			var talks = req.body.talks,
-			userId = req.user._id;
-			if(!talks.length || !talks.splice){
-				throw 500;
-			}
-			//Save talks
-			async.mapSeries(talks,function(talkRequest, indCallback){
-				var talk = new Talk();
-				talk.saveTalk(talkRequest, userId, function(error, talk){
-					//If there is some error, 
-					//send this particular task with error message
-					if(error){
-						talk = {
-							error : error
-						};
-					}
-					indCallback(false, talk);
-				});
-			},function(error, results){
-				if(error){
-					res.status(500);
-					return res.json({
-						error : error
-					});
-				}
-				res.json({
-				    // talks : results
-				    'talks' : results
-				});
-			});
+	    try{
+		var talks = req.body.talks,
+		userId = req.user._id;
+		if(!talks.length || !talks.splice){
+		    throw 500;
+		}
+		
+		/*
+		 * Remove existing User talks
+		 *
+		 * Note: We always assume that the talk data coming from the
+		 * client side is always upto date, so we discard the data here
+		 * and insert new rows via "saveTalk"
+		 */
+		Talk.remove({user: userId}, function(error) {
+		    if(error) {
+			console.log('Error occurred while deleting');
+		    }
+		});    
 
-		} catch(err){
+		//Save talks
+		async.mapSeries(talks,function(talkRequest, indCallback){
+		    var talk = new Talk();			        
+		    talk.saveTalk(talkRequest, userId, function(error, talk){
+			//If there is some error, 
+			//send this particular task with error message
+			if(error){
+			    talk = {
+				error : error
+			    };
+			}
+			indCallback(false, talk);
+		    });
+		},function(error, results){
+		    if(error){
 			res.status(500);
 			return res.json({
-				error : 'Invalid talks request json'
+			    error : error
 			});
-		}*/
-	} else {
-		res.status(400);
-		return res.json({
-			error : 'Invalid request'
+		    }
+		    res.json({
+			// talks : results
+			'talks' : results
+		    });
 		});
+
+	    } catch(err){
+		res.status(500);
+		return res.json({
+		    error : 'Invalid talks request json'
+		});
+	    }
+	} else {
+	    res.status(400);
+	    return res.json({
+		error : 'Invalid request'
+	    });
 	}
 });
 router.get('/talk/:id', function(req, res){
@@ -389,24 +387,28 @@ router.get('/summary/:id',function(req, res){
 			var response = {
 				"identifier": user.email || user.phone
 			};
-
-			if(results.booking.username) {
-				response.username = results.booking.username;
-			}
 		    
 			if(results.booking) {
 			    var bookingJSON = results.booking.toJSON();
+
+			    if(results.booking.username) {
+				response.username = results.booking.username;
+			    }
 
 			    bookingJSON.talk = bookingJSON.talk ? 1 : 0;
 			    bookingJSON.pickup = bookingJSON.pickup ? 1 : 0;
 			    bookingJSON.accommodation = bookingJSON.accommodation ? 1 : 0;
 			    bookingJSON.departure_date = moment(bookingJSON.departure_date).format('DD-MM-YYYY');
 			    bookingJSON.arrival_date = moment(bookingJSON.arrival_date).format('DD-MM-YYYY');
-			    
+
 			    delete bookingJSON.username;
 
 			    response.attendance = [bookingJSON];
 			}
+		        else {
+			    response.attendance = [];
+			}
+
 			if(results.pickup) {
 			    var pickupJSON = results.pickup.toJSON();
 			    
@@ -417,6 +419,10 @@ router.get('/summary/:id',function(req, res){
 
 			    response.pickup = [pickupJSON];
 			}
+		        else {
+			    response.pickup = [];
+			}
+
 			if(results.accommodation) {
 			    var accommodationJSON = results.accommodation.toJSON();
 
@@ -428,8 +434,16 @@ router.get('/summary/:id',function(req, res){
 
 			    response.accommodation = [accommodationJSON];
 			}
-			if(user.talks)
-				response.talks = user.talks;
+		        else {
+			    response.accommodation = [];
+			}
+		    
+			if(user.talks) {
+			    response.talks = user.talks;
+			}
+		        else {
+			    response.talks = [];
+			}
 
 		       response.confirmed = user.confirmed ? 1 : 0;
 
