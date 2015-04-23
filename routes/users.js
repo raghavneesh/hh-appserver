@@ -370,6 +370,11 @@ router.get('/summary/:id',function(req, res){
 				Accommodation.findOne({
 					user : user._id
 				},'-user -_id -__v',callback)
+			},
+			talks : function(callback){
+				Talk.find({
+					user : user._id
+				},'-user -_id -__v',callback)
 			}
 		},function(err, results){
 			if(err){
@@ -438,7 +443,23 @@ router.get('/summary/:id',function(req, res){
 			    response.accommodation = [];
 			}
 		    
-			if(user.talks) {
+			if(results.talks) {
+			    var talksJSONArray = results.talks;
+			    var talkJSON;
+
+			    for(var i = 0; i < talksJSONArray.length; i++) {
+				talkJSON = talksJSONArray[i].toJSON();
+				
+				talkJSON.needsTools = talkJSON.needsTools ? 1 : 0;
+				talkJSON.needsProjector = talkJSON.needsProjector ? 1 : 0;
+				talkJSON.hasCoPresenters = talkJSON.hasCoPresenters ? 1 : 0;
+
+				delete talkJSON.created_at;
+				delete talkJSON.location;
+
+				talksJSONArray[i] = talkJSON;
+			    }
+
 			    response.talks = user.talks;
 			}
 		        else {
