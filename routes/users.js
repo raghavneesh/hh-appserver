@@ -76,65 +76,63 @@ router.get('/reservedates',global.isAuthenticated, function(req, res){
 
 router.post('/talk/add', global.isAuthenticated, function(req, res){
 	if(req.body.talks){
-		var userId = req.user._id,
-		talks = req.body.talks;
-		if(!talks.length || !talks.splice)
-			throw 500;
-		User.findOne({
-			_id : userId
-		},function(err, user){
-			if(!user)
-				throw 500;
-			user.saveTalks(talks,function(){
-				res.json({
-					talks : talks
-				});
-			});
-			
-		});
-		/*try{
-			var talks = req.body.talks,
-			userId = req.user._id;
-			if(!talks.length || !talks.splice){
-				throw 500;
-			}
-			//Save talks
-			async.mapSeries(talks,function(talkRequest, indCallback){
-				var talk = new Talk();
-				talk.saveTalk(talkRequest, userId, function(error, talk){
-					//If there is some error, 
-					//send this particular task with error message
-					if(error){
-						talk = {
-							error : error
-						};
-					}
-					indCallback(false, talk);
-				});
-			},function(error, results){
-				if(error){
-					res.status(500);
-					return res.json({
-						error : error
-					});
-				}
-				res.json({
-				    // talks : results
-				    'talks' : results
-				});
-			});
+	    try{
+		var talks = req.body.talks,
+		userId = req.user._id;
+		if(!talks.length || !talks.splice){
+		    throw 500;
+		}
+		
+		/*
+		 * Remove existing User talks
+		 *
+		 * Note: We always assume that the talk data coming from the
+		 * client side is always upto date, so we discard the data here
+		 * and insert new rows via "saveTalk"
+		 */
+		Talk.remove({user: userId}, function(error) {
+		    if(error) {
+			console.log('Error occurred while deleting');
+		    }
+		});    
 
-		} catch(err){
+		//Save talks
+		async.mapSeries(talks,function(talkRequest, indCallback){
+		    var talk = new Talk();			        
+		    talk.saveTalk(talkRequest, userId, function(error, talk){
+			//If there is some error, 
+			//send this particular task with error message
+			if(error){
+			    talk = {
+				error : error
+			    };
+			}
+			indCallback(false, talk);
+		    });
+		},function(error, results){
+		    if(error){
 			res.status(500);
 			return res.json({
-				error : 'Invalid talks request json'
+			    error : error
 			});
-		}*/
-	} else {
-		res.status(400);
-		return res.json({
-			error : 'Invalid request'
+		    }
+		    res.json({
+			// talks : results
+			'talks' : results
+		    });
 		});
+
+	    } catch(err){
+		res.status(500);
+		return res.json({
+		    error : 'Invalid talks request json'
+		});
+	    }
+	} else {
+	    res.status(400);
+	    return res.json({
+		error : 'Invalid request'
+	    });
 	}
 });
 router.get('/talk/:id', function(req, res){
@@ -296,6 +294,7 @@ router.post('/pickup',global.isAuthenticated,function(req, res){
 		pickup.seats = parseInt(req.body.seats || '1', 10);
 	        location_string = req.body.location.toString().split("\n");
 		pickup.location = location_string[0];
+	        pickup.price = Number(location_string[1].match(/(\d+)/)[0]);
 		pickup.user = user._id;
 		pickup.save();
 		return res.json(pickup);
@@ -331,106 +330,189 @@ router.post('/confirm', global.isAuthenticated, function(req, res){
 			if(err){
 				res.status(500);
 				res.json({
-					confirmed : false
+					"error" : "An internal error occurred"
 				})
 			}
 			return res.json({
-				confirmed : true
+				confirmed : req.body.confirmed
 			});
 		});
 
 	});
 });
-router.get('/summaries',global.isAuthenticated,function(req, res){
-	var user = req.user;
-	async.parallel({
-		user : function(callback){
-			User.findOne({
-				_id : user._id
-			},callback);
-		},
-		booking : function(callback){
-			Booking.findOne({
-				user : user._id
-			},'-user -id -__v',callback)
-		},
-		pickup : function(callback){
-			Pickup.findOne({
-				user : user._id
-			},'-user -id -__v',callback);
-		},
-		accommodation : function(callback){
-			Accommodation.findOne({
-				user : user._id
-			},'-user -id -__v',callback)
-		}
-	},function(err, results){
-		if(err){
+router.get('/summary/:id',function(req, res){
+	var userId = req.params.id;
+	if(!utilities.isValidEmail(userId)){
+		res.status(400);
+		return res.json('Invalid user Id');
+	}
+	User.findOne({
+	    "email" : userId
+	},function(err, user){
+		if(err || !user){
 			res.status(500);
-			return res.json('Error while fetching summary');
+			return res.json({
+				error : 'Error fetching summary'
+			});
 		}
-		if(results.booking){
-			console.log(results.booking.user);
-			delete results.booking.user;
-		}
-		if(results.pickup)
-			delete results.pickup.user;
-		var response = {
-			"identifier": results.user.email || results.user.phone
-		};
+		async.parallel({
+			booking : function(callback){
+				Booking.findOne({
+					user : user._id
+				},'-user -_id -__v',callback)
+			},
+			pickup : function(callback){
+				Pickup.findOne({
+					user : user._id
+				},'-user -_id -__v',callback);
+			},
+			accommodation : function(callback){
+				Accommodation.findOne({
+					user : user._id
+				},'-user -_id -__v',callback)
+			},
+			talks : function(callback){
+				Talk.find({
+					user : user._id
+				},'-user -_id -__v',callback)
+			}
+		},function(err, results){
+			if(err){
+				res.status(500);
+				return res.json('Error while fetching summary');
+			}
 
-		if(results.booking.username)
-			response.username = results.booking.username;
-		if(results.booking)
-			response.attendance = [results.booking];
-		if(results.pickup)
-			response.pickup = [results.pickup];
-		if(results.accommodation)
-			response.accommodation = [results.accommodation];
-		if(results.user.talks)
-			response.talks = results.user.talks;
-		if(results.user.confirmed)
-			response.confirmed = results.user.confirmed;
-		/*var response = {
-			"identifier": results.user.email || results.user.phone, 
-			"username": results.booking.username,
-			"attendance": [results.booking],
-			"accommodation": [
-			  {
-			    "tent": 0,
-			    "sleeping_bag": 1,
-			    "mat": 0,
-			    "pillow": 1,
-			    "family": 1,
-			    "family_details": "Some text about the family details"
-			  }
-			],
-			"pickup": [results.pickup],
-			"talks": [
-			  {
-			    "title": "Some Title 1",
-			    "type": "Workshop",
-			    "event": "CodeCamp",
-			    "duration": "2 hours",
-			    "hasCoPresenters": 0,
-			    "needsProjector": 1,
-			    "needsTools": 0,
-			    "notes": "Some note regarding talk 1"
-			  },
-			  {
-			    "title": "Some Title 2",
-			    "type": "Talk",
-			    "event": "Main Conference",
-			    "duration": "1 week",
-			    "hasCoPresenters": 1,
-			    "needsProjector": 1,
-			    "needsTools": 0,
-			    "notes": "Some note regarding talk 2"
-			  }
-			],
-			"confirmed": 1
-			}*/
-		res.send(response);
+
+			if(results.booking){
+//				console.log(results.booking.user);
+				delete results.booking.user; 
+			}
+			if(results.pickup)
+				delete results.pickup.user;
+			var response = {
+				"identifier": user.email || user.phone
+			};
+		    
+			if(results.booking) {
+			    var bookingJSON = results.booking.toJSON();
+
+			    if(results.booking.username) {
+				response.username = results.booking.username;
+			    }
+
+			    bookingJSON.talk = bookingJSON.talk ? 1 : 0;
+			    bookingJSON.pickup = bookingJSON.pickup ? 1 : 0;
+			    bookingJSON.accommodation = bookingJSON.accommodation ? 1 : 0;
+			    bookingJSON.departure_date = moment(bookingJSON.departure_date).format('DD-MM-YYYY');
+			    bookingJSON.arrival_date = moment(bookingJSON.arrival_date).format('DD-MM-YYYY');
+
+			    delete bookingJSON.username;
+
+			    response.attendance = [bookingJSON];
+			}
+		        else {
+			    response.attendance = [];
+			}
+
+			if(results.pickup) {
+			    var pickupJSON = results.pickup.toJSON();
+			    
+			    pickupJSON.date = moment(pickupJSON.date).format('DD-MM-YYYY');
+			    pickupJSON.location = pickupJSON.location+"\nFare: Rs "+pickupJSON.price;
+			    
+			    delete pickupJSON.price;
+
+			    response.pickup = [pickupJSON];
+			}
+		        else {
+			    response.pickup = [];
+			}
+
+			if(results.accommodation) {
+			    var accommodationJSON = results.accommodation.toJSON();
+
+			    accommodationJSON.family = accommodationJSON.family ? 1 : 0;
+			    accommodationJSON.pillow = accommodationJSON.pillow ? 1 : 0;
+			    accommodationJSON.mat = accommodationJSON.mat ? 1 : 0;
+			    accommodationJSON.sleeping_bag = accommodationJSON.sleeping_bag ? 1 : 0;
+			    accommodationJSON.tent = accommodationJSON.tent ? 1 : 0;
+
+			    response.accommodation = [accommodationJSON];
+			}
+		        else {
+			    response.accommodation = [];
+			}
+		    
+			if(results.talks) {
+			    var talksJSONArray = results.talks;
+			    var talkJSON;
+
+			    for(var i = 0; i < talksJSONArray.length; i++) {
+				talkJSON = talksJSONArray[i].toJSON();
+				
+				talkJSON.needsTools = talkJSON.needsTools ? 1 : 0;
+				talkJSON.needsProjector = talkJSON.needsProjector ? 1 : 0;
+				talkJSON.hasCoPresenters = talkJSON.hasCoPresenters ? 1 : 0;
+
+				delete talkJSON.created_at;
+				delete talkJSON.location;
+
+				talksJSONArray[i] = talkJSON;
+			    }
+
+			    response.talks = talksJSONArray;
+			}
+		        else {
+			    response.talks = [];
+			}
+
+		       response.confirmed = user.confirmed ? 1 : 0;
+
+		       res.send(response);
+		});
+
+	    /**
+	     * These changes were implemented by Avneesh but has been commented out for now 
+	     */
+/*			var getDate = function(dateTimestamp){
+				if(!dateTimestamp)
+					return '';
+				return moment(dateTimestamp).format('DD-MM-YYYY');
+			};
+			var response = {
+				"identifier": user.email || user.phone, 
+				"username": (results.booking && results.booking.username) || '',
+				"attendance": [{
+			    "arrival_date": getDate(results.booking && results.booking.arrival_date),
+			    "departure_date": getDate(results.booking && results.booking.departure_date),
+			    "pickup": Number(results.booking && results.booking.pickup),
+			    "accommodation": Number(results.booking && results.booking.accommodation),
+			    "talk": Number(results.booking && results.booking.talk)
+			  }],
+				"accommodation": [
+				  {
+				    "tent": Number(results.accommodation && results.accommodation.tent),
+				    "sleeping_bag": Number(results.accommodation && results.accommodation.sleeping_bag),
+				    "mat": Number(results.accommodation && results.accommodation.mat),
+				    "pillow": Number(results.accommodation && results.accommodation.pillow),
+				    "family": Number(results.accommodation && results.accommodation.family),
+				    "family_details": (results.accommodation && results.accommodation.family_details) || ''
+				  }
+				],
+				"pickup": [{
+				    "location": (results.pickup && results.pickup.location) || '',
+				    "date": getDate(results.pickup && results.pickup.date),
+				    "seats": (results.pickup && results.pickup.seats) || '',
+				    "time": (results.pickup && results.pickup.time) || ''
+				  }],
+				"talks": [user.talks],
+				"confirmed": Number(user.confirmed)
+			};
+
+			res.json(response);
+	});*/
+	
+		
 	})
 });
 module.exports = router;

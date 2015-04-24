@@ -23,7 +23,7 @@ utils = {
 		if(!message)
 			return; //Throw exception
 		if(!message.from)
-			message.from = 'HillHacks';
+			message.from = 'Please fill up the sender field.';
 		utils.sendEmail(message,done);
 	},
 	isValidEmail : function(email){

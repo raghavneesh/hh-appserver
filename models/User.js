@@ -149,12 +149,35 @@ User.methods.sendVerification = function(){
 	this.isVerified = false;
 	this.verifier = getVerifier();
 	this.save();
+
+	var email_text = 'Hello,\n'
+	email_text += 'Thank you for signing up for hillhacks 2015 via the Evend app!\n\n'
+    
+	email_text += 'Please copy the VERIFICATION CODE below to authenticate yourself to\n'
+	email_text += 'the Evend app, and continue signing up.\n\n\n'
+	
+	
+	email_text += 'VERIFICATION CODE: ' + this.verifier;
+	
+	
+	email_text += '\n\n\nSee you there!\n\n'
+	
+	email_text += 'Love,\n\n'
+	
+	email_text += 'The HH App team.\n'
+	email_text += '--\n\n'
+	
+	email_text += 'More info about hillhacks at: http://www.hillhacks.in/ \n'
+	email_text += 'More info about Evend at: https://github.com/cherrymathew/evend \n'
+	
 	if(this.email){
 		//Send verification email
 		utilities.sendHHEmail({
-			subject : 'Hillhacks Verification',
+			from : 'Hillhacks 2015 <hh-app@zyx.in>',
 			to : this.email,
-			text : 'Verification code for hillhacks is ' + this.verifier
+			'reply-to' : 'mail@hillhacks.in',
+			subject : 'Hillhacks Verification Code',
+			text : email_text
 		});	
 	} 
 	/*else {

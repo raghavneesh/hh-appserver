@@ -7,7 +7,8 @@ Pickup = new schema({
 	date : Number,
 	time : String,
 	seats : Number,
-	location : String
+	location : String,
+        price: Number
 });
 
 Pickup.statics.isValidLocation = function(locationString){
