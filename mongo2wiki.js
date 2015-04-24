@@ -1,9 +1,47 @@
 var mongoose = require('mongoose');
 var ObjectId = mongoose.Schema.ObjectId;
-var rpc = require('node-json-rpc');
+var http = require('http-request');
 
 module.exports = {
-    export: function(uid) {
+
+    loadWiki : function(title, text) {
+	var reqBody = {"jsonrpc": "2.0", "method": {"methodName": "dokuwiki.login"}, "params": [{"string":"admin"},{"string":"admin12345"}], "id": "10"};
+	var authcookie;
+
+	reqBody = JSON.stringify(reqBody);
+
+	http.post({
+	    url: 'fooobar.mooo.com:10980/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
+	    reqBody: new Buffer(reqBody),
+	    headers: {
+		'content-type': 'application/json'
+	    }
+	}, function (err, res) {
+	    if (err) { return console.error(err); }
+
+	    authcookie = res.headers['set-cookie'][0].split(';')[0] + ";" + res.headers['set-cookie'][2].split(';')[0];
+	    console.log(res.code, res.headers['set-cookie'], res.buffer.toString());
+	    console.log(authcookie);
+	    
+	    var reqBody2 = {"jsonrpc": "2.0", "method": {"methodName": "wiki.putPage"}, "params": [{"string":title},{"string":text}], "id": "1"};
+	    reqBody2 = JSON.stringify(reqBody2);
+	    
+	    http.post({
+		url: 'fooobar.mooo.com:10980/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
+		reqBody: new Buffer(reqBody2),
+		method: 'POST',
+		headers: {
+		    'Content-Type': 'application/json',
+		    'Cookie': authcookie
+		}
+	    }, function (err, res2) {
+		if (err) { return console.error(err); }
+		console.log(res2.code, res2.headers,res2.buffer.toString());
+	    });
+	});
+    },
+
+    extractMongo : function(uid) {
 	// Connect to MongoDB
 	mongoose.connect('mongodb://localhost:27017/hillhacks_dev', function(err) {
 	    if (err) return console.log(err);
@@ -47,23 +85,9 @@ module.exports = {
 		confirmed : Boolean
 	    })
 
-	    var options = {
-		// int port of rpc server, default 5080 for http or 5433 for https 
-		port: 10980,
-		// string domain name or ip of rpc server, default '127.0.0.1' 
-		host: 'fooobar.mooo.com',
-		// string with default path, default '/' 
-		path: '/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
-		// boolean false to turn rpc checks off, default true 
-		strict: true
-	    };
-
 	    //Creating MongoDB Models based on Schema
 	    var Talks = mongoose.model('Talk', TalkSchema);
 	    var Users = mongoose.model('User', UserSchema);
-
-	    // Creating JSON RPC Client
-	    var client = new rpc.Client(options);
 
 	    //Extracting Data from MongoDB
 	    Users.findOne({email: uid}, function(err, users) {
@@ -75,23 +99,7 @@ module.exports = {
 			for (var prop in talks) {
 			    wikitext = "---- dataentry signup ----\n" + "type:" + talks[prop].type + "\ntitle:" + talks[prop].title + "\neventtype:" + talks[prop].event + "\nduration:" + talks[prop].duration;
 			    wikititle = talks[prop].title;
-			    client.call(
-				{"jsonrpc": "2.0", "method": {methodName: "dokuwiki.login"}, "params": [{string:"admin"},{string:"admin12345"}], "id": 0},
-				function (err, res) {
-				    // Did it all work ? 
-				    if (err) { console.log(err); }
-				    else { console.log(res); }
-				}
-			    );
-
-			    client.call(
-				{"jsonrpc": "2.0", "method": {methodName: "wiki.putPage"}, "params": [{string:wikititle},{string:wikitext}], "id": 1},
-				function (err, res) {
-				    // Did it all work ? 
-				    if (err) { console.log(err); }
-				    else { console.log(res); }
-				}
-			    );
+			    module.exports.loadWiki(wikititle, wikitext);
 			    console.log(wikitext);
 			}
 		    });
