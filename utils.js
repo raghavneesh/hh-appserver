@@ -1,11 +1,11 @@
 var emailSender = require('emailjs'),
 moment = require('moment')
 server = emailSender.server.connect({
-	user : 'avneesh.raghav@mindgrep.com',
-	password : 'damnhacker',
-	host : 'smtp.gmail.com',
-	tls : true,
-	port : 587
+	user : 'notify@mydomain.com',
+	password : 'myhardpassword',
+	host : 'mysuperhost',
+	tls : true, /* Recommended */
+	port : 587 /* YMMV */
 });
 
 var getRandomInt = function(min, max) {
