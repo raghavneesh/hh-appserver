@@ -3,7 +3,6 @@ var ObjectId = mongoose.Schema.ObjectId;
 var http = require('http-request');
 
 module.exports = {
-
     loadWiki : function(title, text) {
 	var reqBody = {"jsonrpc": "2.0", "method": {"methodName": "dokuwiki.login"}, "params": [{"string":"admin"},{"string":"admin12345"}], "id": "10"};
 	var authcookie;
@@ -104,6 +103,42 @@ module.exports = {
 			}
 		    });
 		}
+	    });
+	});
+    },
+    createUser : function(nick, pass, name, email) {
+	var reqBody = {"jsonrpc": "2.0", "method": {"methodName": "dokuwiki.login"}, "params": [{"string":"admin"},{"string":"admin12345"}], "id": "10"};
+	var authcookie;
+
+	reqBody = JSON.stringify(reqBody);
+
+	http.post({
+	    url: 'fooobar.mooo.com:10980/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
+	    reqBody: new Buffer(reqBody),
+	    headers: {
+		'content-type': 'application/json'
+	    }
+	}, function (err, res) {
+	    if (err) { return console.error(err); }
+
+	    authcookie = res.headers['set-cookie'][0].split(';')[0] + ";" + res.headers['set-cookie'][2].split(';')[0];
+	    console.log(res.code, res.headers['set-cookie'], res.buffer.toString());
+	    console.log(authcookie);
+	    
+	    var reqBody2 = {"jsonrpc": "2.0", "method": {"methodName": "dokuwiki.createUser"}, "params": [{"string":nick},{"string":pass},{"string":name},{"string":email}], "id": "webClient"};
+	    reqBody2 = JSON.stringify(reqBody2);
+	    
+	    http.post({
+		url: 'fooobar.mooo.com:10980/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
+		reqBody: new Buffer(reqBody2),
+		method: 'POST',
+		headers: {
+		    'Content-Type': 'application/json',
+		    'Cookie': authcookie
+		}
+	    }, function (err, res2) {
+		if (err) { return console.error(err); }
+		console.log(res2.code, res2.headers,res2.buffer.toString());
 	    });
 	});
     }
