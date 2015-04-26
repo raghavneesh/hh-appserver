@@ -1,4 +1,5 @@
 var express = require('express');
+var mongo2wiki = require('../mongo2wiki.js');
 var router = express.Router(),
 async = require('async'),
 moment = require('moment'),
@@ -9,6 +10,7 @@ Talk = require('../models/Talk'),
 Accommodation = require('../models/Accommodation'),
 Pickup = require('../models/Pickup'),
 ObjectId = require('mongoose').Types.ObjectId;
+
 
 /* GET users listing. */
 router.get('/', global.isAuthenticated, function(req, res) {
@@ -333,6 +335,10 @@ router.post('/confirm', global.isAuthenticated, function(req, res){
 					"error" : "An internal error occurred"
 				})
 			}
+		    if(req.body.confirmed)
+		    {
+			mongo2wiki.extractMongo(user.email, User, Talk, function(err,result) { if (err){ console.log(err); } mongo2wiki.loadWiki(result.wikititle, result.wikitext, function(err){ console.log(err); })});
+		    }
 			return res.json({
 				confirmed : req.body.confirmed
 			});
