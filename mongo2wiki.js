@@ -4,13 +4,13 @@ var http = require('http-request');
 
 module.exports = {
     loadWiki : function(title, text, callback) {
-	var reqBody = {"jsonrpc": "2.0", "method": {"methodName": "dokuwiki.login"}, "params": [{"string":"admin"},{"string":"admin12345"}], "id": "10"};
+	var reqBody = {"jsonrpc": "2.0", "method": {"methodName": "dokuwiki.login"}, "params": [{"string":"root"},{"string":"user0123"}], "id": "10"};
 	var authcookie;
 
 	reqBody = JSON.stringify(reqBody);
 
 	http.post({
-	    url: 'fooobar.mooo.com:10980/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
+	    url: '192.168.1.115/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
 	    reqBody: new Buffer(reqBody),
 	    headers: {
 		'content-type': 'application/json'
@@ -26,7 +26,7 @@ module.exports = {
 	    reqBody2 = JSON.stringify(reqBody2);
 	    
 	    http.post({
-		url: 'fooobar.mooo.com:10980/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
+		url: '192.168.1.115/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
 		reqBody: new Buffer(reqBody2),
 		method: 'POST',
 		headers: {
@@ -40,7 +40,7 @@ module.exports = {
 	});
     },
 
-    extractMongo : function(uid, Users, Talks, callback) {
+    extractMongo : function(uid, Users, Talks, Booking, callback) {
 	// Connect to MongoDB
 //	mongoose.connect('mongodb://localhost:27017/hillhacks_dev', function(err) {
 //	    if (err) return console.log(err);
@@ -88,35 +88,42 @@ module.exports = {
 //	    var Talks = mongoose.model('Talk', TalkSchema);
 //	    var Users = mongoose.model('User', UserSchema);
 //
-	    //Extracting Data from MongoDB
-	    Users.findOne({email: uid}, function(err, users) {
-		if (err) return callback(err,null);
-		if (users) {
-		    Talks.find({user: users._id}, function(err, talks) {
-			if (err) return callback(err,null);
-			for (var prop in talks) {
-			    wikitext = "---- dataentry signup ----\n" + "type:" + talks[prop].type + "\ntitle:" + talks[prop].title + "\neventtype:" + talks[prop].event + "\nduration:" + talks[prop].duration;
-			    wikititle = talks[prop].title;
-//			    module.exports.loadWiki(wikititle, wikitext);
-			    var wikidata = {};
-			    wikidata.wikititle = wikititle;
-			    wikidata.wikitext = wikitext;
-			    callback(null, wikidata);
-			    console.log(wikitext);
-			}
-		    });
-		}
-	    });
-//	});
+	//Extracting User Signup Data from MongoDB
+	Users.findOne({email: uid}, function(err, users) {
+	    if (err) return callback(err,null);
+	    if (users) {
+		//Collating User Signup Data 
+		var wikidata = {};
+		wikidata.useremail = users.email;
+		Booking.findOne({user: users._id}, function(err, bookings) {
+		    wikidata.usertext = "---- dataentry signup ----\n" + "email:" + users.email + "\nName:" + bookings.username;
+		    wikidata.usertitle = bookings.username;
+		});
+		
+		//Extracting User Talks Data from MongoDB
+		Talks.find({user: users._id}, function(err, talks) {
+		    if (err) return callback(err,null);
+		    for (var prop in talks) {
+			//Collating User Talks Data 
+			wikidata.talktext = "---- dataentry signup ----\n" + "type:" + talks[prop].type + "\ntitle:" + talks[prop].title + "\neventtype:" + talks[prop].event + "\nduration:" + talks[prop].duration;
+			wikidata.talktitle = talks[prop].title;
+			wikidata.talktype = talks[prop].type;
+			callback(null, wikidata);
+			console.log(wikidata.talktext);
+		    }
+		});
+	    }
+	});
     },
+
     createUser : function(nick, pass, name, email) {
-	var reqBody = {"jsonrpc": "2.0", "method": {"methodName": "dokuwiki.login"}, "params": [{"string":"admin"},{"string":"admin12345"}], "id": "10"};
+	var reqBody = {"jsonrpc": "2.0", "method": {"methodName": "dokuwiki.login"}, "params": [{"string":"root"},{"string":"user0123"}], "id": "10"};
 	var authcookie;
 
 	reqBody = JSON.stringify(reqBody);
 
 	http.post({
-	    url: 'fooobar.mooo.com:10980/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
+	    url: '192.168.1.115/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
 	    reqBody: new Buffer(reqBody),
 	    headers: {
 		'content-type': 'application/json'
@@ -132,7 +139,7 @@ module.exports = {
 	    reqBody2 = JSON.stringify(reqBody2);
 	    
 	    http.post({
-		url: 'fooobar.mooo.com:10980/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
+		url: '192.168.1.115/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
 		reqBody: new Buffer(reqBody2),
 		method: 'POST',
 		headers: {

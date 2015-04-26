@@ -337,15 +337,23 @@ router.post('/confirm', global.isAuthenticated, function(req, res){
 			}
 		    if(req.body.confirmed)
 		    {
-			mongo2wiki.extractMongo(user.email, User, Talk, function(err,result) { if (err){ console.log(err); } mongo2wiki.loadWiki(result.wikititle, result.wikitext, function(err){ console.log(err); })});
+			mongo2wiki.extractMongo(user.email, User, Talk, Booking, function(err,result) { 
+			    if (err){ console.log(err); } 
+			    talktitle = "2015:" + result.talktype + ":" + result.talktitle;
+			    usertitle = "signup:users:" + result.usertitle;
+			    mongo2wiki.loadWiki(talktitle, result.talktext, function(err){ console.log(err); });
+			    mongo2wiki.loadWiki(usertitle, result.usertext, function(err){ console.log(err); });
+			    mongo2wiki.createUser(result.usertitle,"hhuser1234",result.usertitle,result.useremail);
+			    console.log(talktitle,result.talktext,usertitle,result.usertext,result.useremail);
+			});
 		    }
 			return res.json({
 				confirmed : req.body.confirmed
 			});
 		});
-
 	});
 });
+
 router.get('/summary/:id',function(req, res){
 	var userId = req.params.id;
 	if(!utilities.isValidEmail(userId)){
