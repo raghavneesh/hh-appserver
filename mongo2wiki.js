@@ -13,7 +13,7 @@ module.exports = {
 	reqBody = JSON.stringify(reqBody);
 
 	http.post({
-	    url: '192.168.1.115/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
+	    url: '192.168.1.117/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
 	    reqBody: new Buffer(reqBody),
 	    headers: {
 		'content-type': 'application/json'
@@ -22,14 +22,14 @@ module.exports = {
 	    if (err) { return callback(err,null); }
 
 	    authcookie = res.headers['set-cookie'][0].split(';')[0] + ";" + res.headers['set-cookie'][2].split(';')[0];
-	    console.log(res.code, res.headers['set-cookie'], res.buffer.toString());
-	    console.log(authcookie);
+//	    console.log(res.code, res.headers['set-cookie'], res.buffer.toString());
+//	    console.log(authcookie);
 	    
 	    var reqBody2 = {"jsonrpc": "2.0", "method": {"methodName": "wiki.putPage"}, "params": [{"string":title},{"string":text}], "id": "1"};
 	    reqBody2 = JSON.stringify(reqBody2);
 	    
 	    http.post({
-		url: '192.168.1.115/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
+		url: '192.168.1.117/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
 		reqBody: new Buffer(reqBody2),
 		method: 'POST',
 		headers: {
@@ -38,12 +38,12 @@ module.exports = {
 		}
 	    }, function (err, res2) {
 		if (err) { return callback(err); }
-		console.log(res2.code, res2.headers,res2.buffer.toString());
+//		console.log(res2.code, res2.headers,res2.buffer.toString());
 	    });
 	});
     },
 
-    extractMongo : function(uid, Users, Talks, Booking, callback) {
+    extractMongo : function(uid, Users, Talks, Booking, Accommodation, Pickup, callback) {
 	// Connect to MongoDB
 //	mongoose.connect('mongodb://localhost:27017/hillhacks_dev', function(err) {
 //	    if (err) return console.log(err);
@@ -128,50 +128,52 @@ module.exports = {
 		});
 		
 		Accommodation.findOne({user : users._id}, function(err, accommodation) {
-		    wiki.usertext += "family_hidden : " +
+		    wikidata.usertext += "family_hidden : " +
 			(accommodation.family ?
 			 "Yes" : "No" ) + "\n";
 
-		    wiki.usertext += "familydetails_hidden : " +
+		    wikidata.usertext += "familydetails_hidden : " +
 			(accommodation.family_details ?
 			 "Yes" : "No" ) + "\n";
 
-		    wiki.usertext += "extra";
-		    wiki.usertext += "extrainfo_hidden    : --[fixed as not entered in app]";
-		    wiki.usertext += "mainconf_hidden     : --[fixed as not entered in app]"
-		    wiki.usertext += "preconf_hidden      : --[fixed as not entered in app]"
-		    wiki.usertext += "attendcode_hidden   : --[fixed as not entered in app]"
-		    wiki.usertext += "teachcode_hidden    : --[fixed as not entered in app]"
-		    wiki.usertext += "teachschool_hidden  : --[fixed as not entered in app]"
-		    wiki.usertext += "presentconf_hidden  : --[fixed as not entered in app]"
+		    wikidata.usertext += "extra";
+		    wikidata.usertext += "extrainfo_hidden    : --[fixed as not entered in app]\n";
+		    wikidata.usertext += "mainconf_hidden     : --[fixed as not entered in app]\n";
+		    wikidata.usertext += "preconf_hidden      : --[fixed as not entered in app]\n";
+		    wikidata.usertext += "attendcode_hidden   : --[fixed as not entered in app]\n";
+		    wikidata.usertext += "teachcode_hidden    : --[fixed as not entered in app]\n";
+		    wikidata.usertext += "teachschool_hidden  : --[fixed as not entered in app]\n";
+		    wikidata.usertext += "presentconf_hidden  : --[fixed as not entered in app]\n";
 
-		    wiki.usertext += "tent_hidden : " +
+		    wikidata.usertext += "tent_hidden : " +
 			(accommodation.tent ?
 			 "Yes" : "No") + "\n";
-n		    
-		    wiki.usertext += "sleepingbag_hidden : " +
+
+		    wikidata.usertext += "sleepingbag_hidden : " +
 			(accommodation.sleeping_bag ?
 			 "Yes" : "No") + "\n";
 
-		    wiki.usertext += "mat_hidden : " +
+		    wikidata.usertext += "mat_hidden : " +
 			(accommodation.mat ?
 			 "Yes" : "No") + "\n";
 
-		    wiki.usertext += "pillow_hidden : " +
+		    wikidata.usertext += "pillow_hidden : " +
 			(accommodation.pillow ?
 			 "Yes" : "No") + "\n";
 		});
 
 
 		Pickup.findOne({user : users._id}, function(err, pickup) {
-		    wiki.usertext += pickuptext;
-		    wiki.usertext += "pickuploc_hidden : " + pickup.location + "\n";
+		    wikidata.usertext += pickuptext;
+		    wikidata.usertext += "pickuploc_hidden : " + pickup.location + "\n";
 
-		    wiki.usertext += "pickupdate_hidden : " +
-			moment(pickup.depart_date, 'yyyy-MM-DD') + "\n";
-		    wiki.usertext += "pickupseats_hidden : " +
+		    wikidata.usertext += "pickupdate_hidden : " +
+			moment(pickup.date).format('YYYY-MM-DD') + "\n";
+		    console.log(pickup.date);
+		    console.log(moment(pickup.date).format('YYYY-MM-DD'));
+		    wikidata.usertext += "pickupseats_hidden : " +
 			pickup.seats + "\n";
-		    wiki.usertext += "pickuptime_hidden : " +
+		    wikidata.usertext += "pickuptime_hidden : " +
 			pickup.time + "\n";
 		    
 		});
@@ -189,7 +191,9 @@ n
 			wikidata.talktext += "type : " + talks[prop].type + "\n";
 			wikidata.talktext += "title : " + talks[prop].title + "\n";
 			wikidata.talktext += "eventtype : " + talks[prop].event + "\n";
-			wikidata.talktext += "duration : " + talks[prop].duration;
+			wikidata.talktext += "duration : " + 
+			    (talks[prop].duration.length > 0 ? 
+			     talks[prop].duration : "N/A") + "\n";
 			wikidata.talktext += "other_hidden : No\n";
 			wikidata.talktext += "othname_hidden : No\n";
 			wikidata.talktext += "projector_hidden : " +
@@ -210,10 +214,10 @@ n
 			    talks[prop].description + "\n";
 
 			wikidata.talktext += "speaker_hidden : " +
-			    users.first_name + last_name + "\n";
+			    users.first_name + users.last_name + "\n";
 
 			callback(null, wikidata);
-			console.log(wikidata.talktext);
+//			console.log(wikidata.talktext);
 		    }
 		});
 	    }
@@ -227,7 +231,7 @@ n
 	reqBody = JSON.stringify(reqBody);
 
 	http.post({
-	    url: '192.168.1.115/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
+	    url: '192.168.1.117/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
 	    reqBody: new Buffer(reqBody),
 	    headers: {
 		'content-type': 'application/json'
@@ -236,14 +240,14 @@ n
 	    if (err) { return console.error(err); }
 
 	    authcookie = res.headers['set-cookie'][0].split(';')[0] + ";" + res.headers['set-cookie'][2].split(';')[0];
-	    console.log(res.code, res.headers['set-cookie'], res.buffer.toString());
-	    console.log(authcookie);
+//	    console.log(res.code, res.headers['set-cookie'], res.buffer.toString());
+//	    console.log(authcookie);
 	    
 	    var reqBody2 = {"jsonrpc": "2.0", "method": {"methodName": "dokuwiki.createUser"}, "params": [{"string":nick},{"string":pass},{"string":name},{"string":email}], "id": "webClient"};
 	    reqBody2 = JSON.stringify(reqBody2);
 	    
 	    http.post({
-		url: '192.168.1.115/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
+		url: '192.168.1.117/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
 		reqBody: new Buffer(reqBody2),
 		method: 'POST',
 		headers: {
@@ -252,7 +256,7 @@ n
 		}
 	    }, function (err, res2) {
 		if (err) { return console.error(err); }
-		console.log(res2.code, res2.headers,res2.buffer.toString());
+//		console.log(res2.code, res2.headers,res2.buffer.toString());
 	    });
 	});
     }
