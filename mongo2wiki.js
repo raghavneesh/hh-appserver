@@ -169,13 +169,10 @@ module.exports = {
 
 		    wikidata.usertext += "pickupdate_hidden : " +
 			moment(pickup.date).format('YYYY-MM-DD') + "\n";
-		    console.log(pickup.date);
-		    console.log(moment(pickup.date).format('YYYY-MM-DD'));
 		    wikidata.usertext += "pickupseats_hidden : " +
 			pickup.seats + "\n";
 		    wikidata.usertext += "pickuptime_hidden : " +
-			pickup.time + "\n";
-		    
+			pickup.time + "\n";		    
 		});
 
 		
