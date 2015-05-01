@@ -12,4 +12,13 @@ Booking = new schema({
 	username : String
 });
 
+Booking.methods.find = function(done){
+	this.find({},function(err, result) {
+		if(err)
+			done(err, null);
+		else
+			done(null, result);
+	});
+}
+
 module.exports = mongoose.model('bookings',Booking);

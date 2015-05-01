@@ -218,6 +218,15 @@ User.statics.verify = function(identifier, code ,done){
 	});
 }
 
+User.methods.findById = function(id, done){
+	this.findOne({_id : id},function(err, result) {
+		if(err)
+			done(err, null);
+		else
+			done(null, result);
+	});
+}
+
 User.statics.findByIdentifier = function(emailOrPhone, done){
 	this.findOne({
 		'$and':[{'$or' : [{
@@ -238,5 +247,13 @@ User.methods.setConfirmed = function(confirmValue, done){
 	this.save(done);
 }
 
+User.methods.find = function(done){
+	this.find({},function(err, result) {
+		if(err)
+			done(err, null);
+		else
+			done(null, result);
+	});
+}
 
 module.exports = mongoose.model('users',User);

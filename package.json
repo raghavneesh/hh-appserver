@@ -26,6 +26,8 @@
     "twilio": "^2.0.0",
     "node-json-rpc": "0.0.1",
     "jsonrpc2": "~0.1.1",
-    "http-request": "~0.7.0"
+    "http-request": "~0.7.0",
+    "basic-auth-connect": "~1.0.0",
+    "ejs": "~2.3.1"
   }
 }

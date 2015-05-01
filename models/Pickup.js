@@ -19,4 +19,14 @@ Pickup.statics.isValidLocation = function(locationString){
 	}
 	return false;
 }
+
+Pickup.methods.find = function(done){
+	this.find({},function(err, result) {
+		if(err)
+			done(err, null);
+		else
+			done(null, result);
+	});
+}
+
 module.exports = mongoose.model('pickup',Pickup);

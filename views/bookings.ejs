@@ -1,0 +1,78 @@
+<html>
+  <head>
+    <title><%=title%></title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap -->
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <link rel='stylesheet' href='//cdn.datatables.net/1.10.6/css/jquery.dataTables.css' type="text/css" />
+  </head>
+  <body>
+    <div class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <a href="../" class="navbar-brand"><!--<img src="assets/images/logo.png">-->Evend</a>
+          <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+        </div>
+        <div class="navbar-collapse collapse" id="navbar-main">
+          <ul class="nav navbar-nav navbar-right">
+             <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">admin <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                   <li><a href="/admin/logout">Sign Out</a></li>
+                </ul>
+             </li>
+           </ul>
+        </div>
+      </div>
+    </div>
+    <div class="container" style="padding-top:50">
+      <div class="row">
+          <div class="center-block">
+            <h1 class="h1"> Admin</h1>
+          </div>
+      </div>
+      <div class="row">
+        <div class="center-block">
+
+          <table id="bookings" class="display" cellspacing="0" width="100%">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Talk</th>
+                <th>Pickup</th>
+                <th>Accommodation</th>
+                <th>Arrival Date</th>
+                <th>Departure Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% for(var i=0; i<bookings.length; i++) {%>
+                <tr>
+                  <td><a href="/admin/users/<%= bookings[i].user %>"><%= bookings[i].user %></a></td>
+                  <td><%= bookings[i].talk %></td>
+                  <td><%= bookings[i].pickup %></td>
+                  <td><%= bookings[i].accommodation %></td>
+                  <td><%= bookings[i].arrival_date %></td>
+                  <td><%= bookings[i].departure_date %></td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="//cdn.datatables.net/1.10.6/js/jquery.dataTables.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        $('#bookings').DataTable();
+      });
+    </script>
+  </body>
+</html>

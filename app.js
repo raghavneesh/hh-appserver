@@ -6,6 +6,8 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session = require('express-session');
 var mongoose = require('mongoose');
+var basicAuth = require('basic-auth-connect');
+
 
 //Get appliation configuration
 var applicationConfig = require('./conf/appconf').conf;
@@ -24,6 +26,7 @@ global.isAuthenticated = ensureAuthenticated;
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var admin = require('./routes/admin');
 var Token = require('./models/Token');
 
 var app = express();
@@ -33,7 +36,7 @@ var passport = require('passport');
 require('./auth.js')(passport);
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.set('view engine', 'ejs');
 
 app.use(favicon());
 app.use(logger('dev'));
@@ -54,12 +57,13 @@ app.use(passport.initialize());
 app.use(passport.session());
 // app.use(modifyResponse);
 
-
 app.use(function(req, res, next){
     req.user = null;
     next();
 });
 
+app.use('/admin',basicAuth(applicationConfig.admin.username , applicationConfig.admin.password ));
+app.use('/admin', admin);
 
 app.use('/', routes);
 app.use('/users', users);
@@ -70,7 +74,6 @@ app.use(function(req, res, next) {
     err.status = 404;
     next(err);
 });
-
 /// error handlers
 
 // development error handler

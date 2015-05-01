@@ -16,4 +16,14 @@ Accommodation = new schema({
 Accommodation.statics.isValidType = function(accommodationStr){
 	return (accommodationStr && (global.Event.accommodation.types.indexOf(accommodationStr) != -1));
 }
+
+Accommodation.methods.find = function(done){
+	this.find({},function(err, result) {
+		if(err)
+			done(err, null);
+		else
+			done(null, result);
+	});
+}
+
 module.exports = mongoose.model('accommodation',Accommodation);

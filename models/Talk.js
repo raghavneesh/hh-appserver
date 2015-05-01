@@ -75,4 +75,13 @@ Talk.statics.isValidEvent = function(eventType){
 	return (global.Event.talk.events.indexOf(eventType) > -1);
 }
 
+Talk.methods.find = function(done){
+	this.find({},function(err, result) {
+		if(err)
+			done(err, null);
+		else
+			done(null, result);
+	});
+}
+
 module.exports = mongoose.model('talks',Talk);

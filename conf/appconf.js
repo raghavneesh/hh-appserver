@@ -4,6 +4,10 @@ exports.conf = {
 		"host" : "localhost",
 		"port" : 27017
 	},
+	"admin" : {
+		"username" : "django",
+		"password" : "shashi"
+	},
 	"event" : {
 		"startDate" : new Date("2015-05-01").getTime(),
 		"endDate" : new Date("2015-06-08").getTime(),
