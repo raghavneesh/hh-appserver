@@ -21,7 +21,13 @@ module.exports = {
 	}, function (err, res) {
 	    if (err) { return callback(err,null); }
 
-	    authcookie = res.headers['set-cookie'][0].split(';')[0] + ";" + res.headers['set-cookie'][2].split(';')[0];
+//	    console.log(res.headers['set-cookie']);
+	    if(res.headers['set-cookie'].length > 2) {
+		authcookie = res.headers['set-cookie'][0].split(';')[0] + ";" + res.headers['set-cookie'][2].split(';')[0];
+	    }
+	    else {
+		authcookie = res.headers['set-cookie'][0].split(';')[0] + ";" + res.headers['set-cookie'][1].split(';')[0];
+	    }
 //	    console.log(res.code, res.headers['set-cookie'], res.buffer.toString());
 //	    console.log(authcookie);
 	    
@@ -175,6 +181,7 @@ module.exports = {
 			pickup.time + "\n";		    
 		});
 
+		wikidata.usertext += "----";
 		
 		//Extracting User Talks Data from MongoDB
 		Talks.find({user: users._id}, function(err, talks) {
@@ -213,6 +220,7 @@ module.exports = {
 			wikidata.talktext += "speaker_hidden : " +
 			    users.first_name + users.last_name + "\n";
 
+			wikidata.talktext += "----";
 			callback(null, wikidata);
 //			console.log(wikidata.talktext);
 		    }
@@ -236,7 +244,12 @@ module.exports = {
 	}, function (err, res) {
 	    if (err) { return console.error(err); }
 
-	    authcookie = res.headers['set-cookie'][0].split(';')[0] + ";" + res.headers['set-cookie'][2].split(';')[0];
+	    if(res.headers['set-cookie'].length > 2) {
+		authcookie = res.headers['set-cookie'][0].split(';')[0] + ";" + res.headers['set-cookie'][2].split(';')[0];
+	    }
+	    else {
+		authcookie = res.headers['set-cookie'][0].split(';')[0] + ";" + res.headers['set-cookie'][1].split(';')[0];
+	    }
 //	    console.log(res.code, res.headers['set-cookie'], res.buffer.toString());
 //	    console.log(authcookie);
 	    
