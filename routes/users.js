@@ -339,11 +339,26 @@ router.post('/confirm', global.isAuthenticated, function(req, res){
 		    {
 			mongo2wiki.extractMongo(user.email, User, Talk, Booking, Accommodation, Pickup, function(err,result) { 
 			    if (err){ console.log(err); } 
-			    talktitle = "2015:" + result.talktype + ":" + result.talktitle;
+			    talktitle = "2015:" + result.talktype + ":" + result.talktitle;			    
 			    usertitle = "signup:users:" + result.usertitle;
-			    mongo2wiki.loadWiki(talktitle, result.talktext, function(err){ console.log(err); });
-			    mongo2wiki.loadWiki(usertitle, result.usertext, function(err){ console.log(err); });
-			    mongo2wiki.createUser(result.usertitle,"hhuser1234",result.usertitle,result.useremail);
+
+			    usertext = "";
+			    usertext += result.bookingtext;
+			    usertext += result.accommodationtext;
+			    usertext += result.pickuptext;
+			    usertext += "----";
+
+			    talktext = "= " + result.talktitle + " =\n" ;
+			    talktext += "A "+ result.talktype  + " by " + result.usertitle+", at "+ result.eventtype +"\n";
+			    talktext += result.talktext;
+			    talktext += "by : " +  result.usertitle + "\n";
+			    talktext += "descript_hidden : A "+ result.talktype  + " by " + result.usertitle+", \n";
+			    talktext += "----";
+
+			    mongo2wiki.loadWiki(talktitle, talktext, function(err){ console.log(err); }); 
+			    mongo2wiki.loadWiki(usertitle, usertext, function(err){ console.log(err); });
+
+//			    mongo2wiki.createUser(result.usertitle,"hhuser1234",result.usertitle,result.useremail);
 			    //console.log(talktitle,result.talktext,usertitle,result.usertext,result.useremail);
 			});
 		    }
