@@ -1,19 +1,16 @@
-//var mongoose = require('mongoose');
-//var ObjectId = mongoose.Schema.ObjectId;
-
 var moment = require('moment'); /* Date conversion */
-
 var http = require('http-request');
 
 module.exports = {
     loadWiki : function(title, text, callback) {
-	var reqBody = {"jsonrpc": "2.0", "method": {"methodName": "dokuwiki.login"}, "params": [{"string":"root"},{"string":"user0123"}], "id": "10"};
+
+	var reqBody = {"jsonrpc": "2.0", "method": {"methodName": "dokuwiki.login"}, "params": [{"string":"username"},{"string":"password"}], "id": "10"};
 	var authcookie;
 
 	reqBody = JSON.stringify(reqBody);
 
 	http.post({
-	    url: '192.168.1.117/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
+	    url: 'http://hillhacks.in/lib/plugins/jsonrpc/jsonrpc.php',
 	    reqBody: new Buffer(reqBody),
 	    headers: {
 		'content-type': 'application/json'
@@ -21,15 +18,18 @@ module.exports = {
 	}, function (err, res) {
 	    if (err) { return callback(err,null); }
 
-	    authcookie = res.headers['set-cookie'][0].split(';')[0] + ";" + res.headers['set-cookie'][2].split(';')[0];
-//	    console.log(res.code, res.headers['set-cookie'], res.buffer.toString());
-//	    console.log(authcookie);
+	    if(res.headers['set-cookie'].length > 2) {
+		authcookie = res.headers['set-cookie'][0].split(';')[0] + ";" + res.headers['set-cookie'][2].split(';')[0];
+	    }
+	    else {
+		authcookie = res.headers['set-cookie'][0].split(';')[0] + ";" + res.headers['set-cookie'][1].split(';')[0];
+	    }
 	    
 	    var reqBody2 = {"jsonrpc": "2.0", "method": {"methodName": "wiki.putPage"}, "params": [{"string":title},{"string":text}], "id": "1"};
 	    reqBody2 = JSON.stringify(reqBody2);
 	    
 	    http.post({
-		url: '192.168.1.117/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
+		url: 'http://hillhacks.in/lib/plugins/jsonrpc/jsonrpc.php',
 		reqBody: new Buffer(reqBody2),
 		method: 'POST',
 		headers: {
@@ -37,156 +37,147 @@ module.exports = {
 		    'Cookie': authcookie
 		}
 	    }, function (err, res2) {
-		if (err) { return callback(err); }
-//		console.log(res2.code, res2.headers,res2.buffer.toString());
+		if (err) { return callback(err,null); }
+		return callback(null, res2);
 	    });
 	});
     },
 
     extractMongo : function(uid, Users, Talks, Booking, Accommodation, Pickup, callback) {
-	// Connect to MongoDB
-//	mongoose.connect('mongodb://localhost:27017/hillhacks_dev', function(err) {
-//	    if (err) return console.log(err);
-
-	    //TalkSchema
-//	    var TalkSchema = mongoose.Schema({
-//		_id : ObjectId,
-//		user : ObjectId,
-//		title : String,
-//		description : String,
-//		date : Number,
-//		duration : String,
-//		type : String,
-//		event : String,
-//		notes : String,
-//		location : {
-//		    name : String,
-//		    lat : Number,
-//		    lng : Number
-//		},
-//		hasCoPresenters : Boolean,
-//		needsProjector : Boolean,
-//		needsTools : Boolean,
-//		created_at : Number,
-//		updated_at : Number
-//	    });
-//
-//	    //UserSchema
-//	    var UserSchema = mongoose.Schema({
-//		_id : ObjectId,
-//		email : 'String',
-//		phone : 'String',
-//		first_name : 'String',
-//		last_name : 'String',
-//		created_at : 'Number',
-//		last_login : 'Number',
-//		oauth : 'Mixed',
-//		isVerified : 'Boolean',
-//		verifier : 'String',
-//		talks : 'Mixed',
-//		confirmed : Boolean
-//	    })
-//
-//	    //Creating MongoDB Models based on Schema
-//	    var Talks = mongoose.model('Talk', TalkSchema);
-//	    var Users = mongoose.model('User', UserSchema);
-//
 	//Extracting User Signup Data from MongoDB
 	Users.findOne({email: uid}, function(err, users) {
-	    if (err) return callback(err,null);
+	    if (err) { return callback(err,null); }
 	    if (users) {
 		//Collating User Signup Data 
 		var wikidata = {};
 		var pickuptext;
 		
 		wikidata.useremail = users.email;
+		wikidata.bookingtext = "";
+		wikidata.accommodationtext = "";
+		wikidata.pickuptext = "";
+
 		Booking.findOne({user: users._id}, function(err, bookings) {
+		    if (err) { return callback(err,null); }
 		    wikidata.usertitle = bookings.username;
-		    
-		    wikidata.usertext = "---- dataentry signup ----\n";
-		    wikidata.usertext += "type : signup\n";
-		    wikidata.usertext += "interestlevel : " +
+
+		    wikidata.bookingtext = "====== " + bookings.username + " ======\n" ;
+
+		    wikidata.bookingtext += "\n**What would you like to do at hillhacks:** \n\n";
+		    wikidata.bookingtext += "Attend Main Conference Events         : Unknown \n";
+		    wikidata.bookingtext += "Attend Pre Conference Events          : Unknown \n";
+		    wikidata.bookingtext += "Present a talk, workshop or session   : "+(bookings.talk ? "Yes" : "No")+" \n";
+		    wikidata.bookingtext += "Teach in the school outreach sessions : Unknown \n";
+		    wikidata.bookingtext += "Attend Learn To Code                  : Unknown \n";
+		    wikidata.bookingtext += "Mentor at Learn To Code               : Unknown \n";
+
+		    wikidata.bookingtext += "\n**Some more information about you:** \n\n";
+		    wikidata.bookingtext += "Will be filled by the user later. \n";
+
+		    wikidata.bookingtext += "\n\n//''NOTE: Content autogenerated using [[https://github.com/cherrymathew/evend|Evend]].''// \n";
+
+		    wikidata.bookingtext += "---- dataentry signup ----\n";
+		    wikidata.bookingtext += "type : signup\n";
+		    wikidata.bookingtext += "interestlevel : " +
 			(users.confirmed ?
-			 "Yes I am coming" :
-			 "I am coming, don't know when exactly yet") + "\n";
+			 "Yes I am coming, dates set!" :
+			 "I am thinking of coming, not sure yet") + "\n";
 		    
-		    wikidata.usertext += "accommodation :" +
+		    wikidata.bookingtext += "accommodation : " +
 			(bookings.accommodation ?
 			 "Yes" : "No") + "\n";
 
 		    /* Arrival / Departure - there are no separate accoms dates */
-		    wikidata.user += "arrival : " + moment(bookings.arrival_date, 'yyyy-MM-DD') + "\n";
-		    wikidata.user += "departure : " + moment(bookings.depart_date, 'yyyy-MM-DD') + "\n";
+		    wikidata.bookingtext += "arrival : " + moment(bookings.arrival_date).format('YYYY-MM-DD') + "\n";
+		    wikidata.bookingtext += "departure : " + moment(bookings.departure_date).format('YYYY-MM-DD') + "\n";
 
-		    wikidata.usertext += "publication_hidden : Yes \n";
+		    wikidata.bookingtext += "publication_hidden : No \n";
 		    
-		    wikidata.usertext += "email_hidden : " + users.email + "\n";
+		    wikidata.bookingtext += "email_hidden : " + users.email + "\n";
+
+		    wikidata.bookingtext += "extrainfo_hidden    : --\n";
+		    wikidata.bookingtext += "mainconf_hidden     : --\n";
+		    wikidata.bookingtext += "preconf_hidden      : --\n";
+		    wikidata.bookingtext += "attendcode_hidden   : --\n";
+		    wikidata.bookingtext += "teachcode_hidden    : --\n";
+		    wikidata.bookingtext += "teachschool_hidden  : --\n";
+		    wikidata.bookingtext += "presentconf_hidden  : "+(bookings.talk ? "Yes" : "No")+"\n";
+
+
+		    // Pickup data which is present in the bookings table
 		    pickuptext = "pickup_hidden : " +
 			(bookings.pickup ?
 			 "Yes" : "No") + "\n";
-						       
+		    wikidata.pickuptext += pickuptext;
 		});
 		
 		Accommodation.findOne({user : users._id}, function(err, accommodation) {
-		    wikidata.usertext += "family_hidden : " +
+		    if (err) { return callback(err,null); }
+		    wikidata.accommodationtext += "family_hidden : " +
 			(accommodation.family ?
 			 "Yes" : "No" ) + "\n";
 
-		    wikidata.usertext += "familydetails_hidden : " +
-			(accommodation.family_details ?
-			 "Yes" : "No" ) + "\n";
+		    if(accommodation.family_details) {
+			wikidata.accommodationtext += "familydetails_hidden : " + accommodation.family_details +"\n";
+		    }
+		    else {
+			wikidata.accommodationtext += "familydetails_hidden : --\n";
+		    }
 
-		    wikidata.usertext += "extra";
-		    wikidata.usertext += "extrainfo_hidden    : --[fixed as not entered in app]\n";
-		    wikidata.usertext += "mainconf_hidden     : --[fixed as not entered in app]\n";
-		    wikidata.usertext += "preconf_hidden      : --[fixed as not entered in app]\n";
-		    wikidata.usertext += "attendcode_hidden   : --[fixed as not entered in app]\n";
-		    wikidata.usertext += "teachcode_hidden    : --[fixed as not entered in app]\n";
-		    wikidata.usertext += "teachschool_hidden  : --[fixed as not entered in app]\n";
-		    wikidata.usertext += "presentconf_hidden  : --[fixed as not entered in app]\n";
-
-		    wikidata.usertext += "tent_hidden : " +
+		    wikidata.accommodationtext += "tent_hidden : " +
 			(accommodation.tent ?
 			 "Yes" : "No") + "\n";
 
-		    wikidata.usertext += "sleepingbag_hidden : " +
+		    wikidata.accommodationtext += "sleepingbag_hidden : " +
 			(accommodation.sleeping_bag ?
 			 "Yes" : "No") + "\n";
 
-		    wikidata.usertext += "mat_hidden : " +
+		    wikidata.accommodationtext += "mat_hidden : " +
 			(accommodation.mat ?
 			 "Yes" : "No") + "\n";
 
-		    wikidata.usertext += "pillow_hidden : " +
+		    wikidata.accommodationtext += "pillow_hidden : " +
 			(accommodation.pillow ?
 			 "Yes" : "No") + "\n";
 		});
 
 
 		Pickup.findOne({user : users._id}, function(err, pickup) {
-		    wikidata.usertext += pickuptext;
-		    wikidata.usertext += "pickuploc_hidden : " + pickup.location + "\n";
+		    if (err) { return callback(err,null); }
+		    wikidata.pickuptext += "pickuploc_hidden : " + pickup.location + "\n";
 
-		    wikidata.usertext += "pickupdate_hidden : " +
+		    wikidata.pickuptext += "pickupdate_hidden : " +
 			moment(pickup.date).format('YYYY-MM-DD') + "\n";
-		    wikidata.usertext += "pickupseats_hidden : " +
+		    wikidata.pickuptext += "pickupseats_hidden : " +
 			pickup.seats + "\n";
-		    wikidata.usertext += "pickuptime_hidden : " +
-			pickup.time + "\n";		    
+		    wikidata.pickuptext += "pickuptime_hidden : " +
+			pickup.time + "\n";
 		});
-
 		
 		//Extracting User Talks Data from MongoDB
 		Talks.find({user: users._id}, function(err, talks) {
-		    if (err) return callback(err,null);
+		    if (err) { return callback(err,null); }
 		    for (var prop in talks) {
 			//Collating User Talks Data
 			wikidata.talktitle = talks[prop].title;
 			wikidata.talktype = talks[prop].type;
+			wikidata.eventtype = talks[prop].event;
 			
-			wikidata.talktext = "---- dataentry signup ----\n";
-			wikidata.talktext += "type : " + talks[prop].type + "\n";
+			wikidata.talktext = "=== Abstract ===\n" ;
+			wikidata.talktext += "Will be filled by the speaker later. \n";
+
+			wikidata.talktext += "\n=== Main Description ===\n" ;
+			wikidata.talktext += "Will be filled by the speaker later. \n";
+
+			wikidata.talktext += "\n=== Speaker ===\n" ;
+			wikidata.talktext += "Will be filled by the speaker later. \n";
+
+			wikidata.talktext += "\n//''NOTE: Content autogenerated using [[https://github.com/cherrymathew/evend|Evend]].''// \n";
+
+			wikidata.talktext += "\n---- dataentry signup ----\n";
+			wikidata.talktext += "type_hidden : " + talks[prop].type + "\n";
 			wikidata.talktext += "title : " + talks[prop].title + "\n";
+			wikidata.talktext += "email_hidden : " + users.email + "\n";
 			wikidata.talktext += "eventtype : " + talks[prop].event + "\n";
 			wikidata.talktext += "duration : " + 
 			    (talks[prop].duration.length > 0 ? 
@@ -202,49 +193,62 @@ module.exports = {
 			     "Yes, I need tools" :
 			     "No, I don't need any tools") + "\n";
 
-			wikidata.talktext += "toolSpec_hidden : N.A \n";
-			wikidata.talktext += "else_hidden" +
+			wikidata.talktext += "else_hidden : " +
 			    ((talks[prop].length > 0) ?
 			     talks[prop].length :
 			     "No") + "\n";
-			wikidata.talktext += "abstract_hidden : " +
-			    talks[prop].description + "\n";
 
-			wikidata.talktext += "speaker_hidden : " +
-			    users.first_name + users.last_name + "\n";
+			if(talks[prop].needsTools) {
+			    if(talks[prop].notes) {
+				wikidata.talktext += "toolSpec_hidden : " + talks[prop].notes + " \n";
+			    }
+			    else {
+				wikidata.talktext += "toolSpec_hidden : N.A \n";
+			    }
+			} 
+			else {
+			    wikidata.talktext += "toolSpec_hidden : N.A \n";
+			}
 
+			wikidata.talktext += "abstract_hidden : Will be filled by the speaker later. \n";
+			wikidata.talktext += "speaker_hidden : Will be filled by the speaker later. \n";
+			
+			wikidata.talktext += "autogenerated_hidden : yes \n";
 			callback(null, wikidata);
-//			console.log(wikidata.talktext);
 		    }
 		});
 	    }
 	});
     },
 
-    createUser : function(nick, pass, name, email) {
-	var reqBody = {"jsonrpc": "2.0", "method": {"methodName": "dokuwiki.login"}, "params": [{"string":"root"},{"string":"user0123"}], "id": "10"};
+    createUser : function(nick, pass, name, email, callback) {
+	var reqBody = {"jsonrpc": "2.0", "method": {"methodName": "dokuwiki.login"}, "params": [{"string":"username"},{"string":"password"}], "id": "10"};
+
 	var authcookie;
 
 	reqBody = JSON.stringify(reqBody);
 
 	http.post({
-	    url: '192.168.1.117/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
+	    url: 'http://hillhacks.in/lib/plugins/jsonrpc/jsonrpc.php',
 	    reqBody: new Buffer(reqBody),
 	    headers: {
 		'content-type': 'application/json'
 	    }
 	}, function (err, res) {
-	    if (err) { return console.error(err); }
+	    if (err) { return callback(err,null); }
 
-	    authcookie = res.headers['set-cookie'][0].split(';')[0] + ";" + res.headers['set-cookie'][2].split(';')[0];
-//	    console.log(res.code, res.headers['set-cookie'], res.buffer.toString());
-//	    console.log(authcookie);
+	    if(res.headers['set-cookie'].length > 2) {
+		authcookie = res.headers['set-cookie'][0].split(';')[0] + ";" + res.headers['set-cookie'][2].split(';')[0];
+	    }
+	    else {
+		authcookie = res.headers['set-cookie'][0].split(';')[0] + ";" + res.headers['set-cookie'][1].split(';')[0];
+	    }
 	    
 	    var reqBody2 = {"jsonrpc": "2.0", "method": {"methodName": "dokuwiki.createUser"}, "params": [{"string":nick},{"string":pass},{"string":name},{"string":email}], "id": "webClient"};
 	    reqBody2 = JSON.stringify(reqBody2);
 	    
 	    http.post({
-		url: '192.168.1.117/dokuwiki/lib/plugins/jsonrpc/jsonrpc.php',
+		url: 'http://hillhacks.in/lib/plugins/jsonrpc/jsonrpc.php',
 		reqBody: new Buffer(reqBody2),
 		method: 'POST',
 		headers: {
@@ -252,8 +256,8 @@ module.exports = {
 		    'Cookie': authcookie
 		}
 	    }, function (err, res2) {
-		if (err) { return console.error(err); }
-//		console.log(res2.code, res2.headers,res2.buffer.toString());
+		if (err) { return callback(err,null); }
+		return callback(null, res2);
 	    });
 	});
     }
