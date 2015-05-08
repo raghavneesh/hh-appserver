@@ -49,10 +49,15 @@ router.post('/reservedates', global.isAuthenticated ,function(req, res){
 	    booking.accommodation = !!(accommodation); //Set accommodation as boolean
 	    booking.pickup = !!(pickup); //Set pickup as boolean
 	    booking.talk = !!req.body.talk;
+	    booking.main_conference = !!req.body.main_conference;
+	    booking.pre_conference = !!req.body.pre_conference;
+	    booking.learn_to_code = !!req.body.learn_to_code;
+	    booking.teach_learn_to_code = !!req.body.teach_learn_to_code;
+	    booking.teach_school_outreach = !!req.body.teach_school_outreach;
 	    booking.user = user._id; //Set user id
 	    booking.username = req.body.username;
 	    booking.save(); //Saves
-
+	    	    
 	    if(!accommodation) {
 		Accommodation.remove({user: userId}, function(error) {
 		    if(error) {

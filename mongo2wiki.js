@@ -64,12 +64,12 @@ module.exports = {
 		    wikidata.bookingtext = "====== " + bookings.username + " ======\n" ;
 
 		    wikidata.bookingtext += "\n**What would you like to do at hillhacks:** \n\n";
-		    wikidata.bookingtext += "Attend Main Conference Events         : Unknown \n";
-		    wikidata.bookingtext += "Attend Pre Conference Events          : Unknown \n";
+		    wikidata.bookingtext += "Attend Main Conference Events         : "+(bookings.main_conference ? "Yes" : "No")+" \n";
+		    wikidata.bookingtext += "Attend Pre Conference Events          : "+(bookings.pre_conference ? "Yes" : "No")+" \n";
 		    wikidata.bookingtext += "Present a talk, workshop or session   : "+(bookings.talk ? "Yes" : "No")+" \n";
-		    wikidata.bookingtext += "Teach in the school outreach sessions : Unknown \n";
-		    wikidata.bookingtext += "Attend Learn To Code                  : Unknown \n";
-		    wikidata.bookingtext += "Mentor at Learn To Code               : Unknown \n";
+		    wikidata.bookingtext += "Teach in the school outreach sessions : "+(bookings.teach_school_outreach ? "Yes" : "No")+" \n";
+		    wikidata.bookingtext += "Attend Learn To Code                  : "+(bookings.learn_to_code ? "Yes" : "No")+" \n";
+		    wikidata.bookingtext += "Mentor at Learn To Code               : "+(bookings.teach_learn_to_code ? "Yes" : "No")+" \n";
 
 		    wikidata.bookingtext += "\n**Some more information about you:** \n\n";
 		    wikidata.bookingtext += "Will be filled by the user later. \n";
@@ -96,11 +96,11 @@ module.exports = {
 		    wikidata.bookingtext += "email_hidden : " + users.email + "\n";
 
 		    wikidata.bookingtext += "extrainfo_hidden    : --\n";
-		    wikidata.bookingtext += "mainconf_hidden     : --\n";
-		    wikidata.bookingtext += "preconf_hidden      : --\n";
-		    wikidata.bookingtext += "attendcode_hidden   : --\n";
-		    wikidata.bookingtext += "teachcode_hidden    : --\n";
-		    wikidata.bookingtext += "teachschool_hidden  : --\n";
+		    wikidata.bookingtext += "mainconf_hidden     : "+(bookings.main_conference ? "Yes" : "No")+"\n";
+		    wikidata.bookingtext += "preconf_hidden      : "+(bookings.pre_conference ? "Yes" : "No")+"\n";
+		    wikidata.bookingtext += "attendcode_hidden   : "+(bookings.learn_to_code ? "Yes" : "No")+"\n";
+		    wikidata.bookingtext += "teachcode_hidden    : "+(bookings.teach_learn_to_code ? "Yes" : "No")+"\n";
+		    wikidata.bookingtext += "teachschool_hidden  : "+(bookings.teach_school_outreach ? "Yes" : "No")+"\n";
 		    wikidata.bookingtext += "presentconf_hidden  : "+(bookings.talk ? "Yes" : "No")+"\n";
 
 
