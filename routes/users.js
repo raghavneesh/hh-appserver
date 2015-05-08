@@ -1,6 +1,6 @@
 var express = require('express');
 var mongo2wiki = require('../mongo2wiki.js');
-var router = express.Router(),
+var router = express.Router();
 async = require('async'),
 moment = require('moment'),
 utilities = require('../utils.js'),
@@ -35,23 +35,50 @@ router.post('/reservedates', global.isAuthenticated ,function(req, res){
 		});
 	}
 	Booking.findOne({
-		user : req.user._id
+	    user : req.user._id
 	},function(error, booking){
-		if(error){
-			return next(error);
-		}
-		if(!booking)
-			booking = new Booking(); //Create new booking
-		booking.arrival_date = arrivalDate.valueOf();
-		booking.departure_date = departureDate.valueOf();
-		/*booking.dates = eventDates; //set dates*/
-		booking.accommodation = !!(accommodation); //Set accommodation as boolean
-		booking.pickup = !!(pickup); //Set pickup as boolean
-		booking.talk = !!req.body.talk;
-		booking.user = user._id; //Set user id
-		booking.username = req.body.username;
-		booking.save(); //Saves
-		res.json(booking);
+	    if(error){
+		return next(error);
+	    }
+	    var userId = req.user._id;
+	    if(!booking)
+		booking = new Booking(); //Create new booking
+	    booking.arrival_date = arrivalDate.valueOf();
+	    booking.departure_date = departureDate.valueOf();
+	    /*booking.dates = eventDates; //set dates*/
+	    booking.accommodation = !!(accommodation); //Set accommodation as boolean
+	    booking.pickup = !!(pickup); //Set pickup as boolean
+	    booking.talk = !!req.body.talk;
+	    booking.user = user._id; //Set user id
+	    booking.username = req.body.username;
+	    booking.save(); //Saves
+
+	    if(!accommodation) {
+		Accommodation.remove({user: userId}, function(error) {
+		    if(error) {
+			console.log('Error occurred while deleting');
+		    }
+		});
+	    }
+
+	    if(!pickup) {
+		Pickup.remove({user: userId}, function(error) {
+		    if(error) {
+			console.log('Error occurred while deleting');
+		    }
+		});
+	    }
+
+	    if(!req.body.talk) {
+		Talk.remove({user: userId}, function(error) {
+		    if(error) {
+			console.log('Error occurred while deleting');
+		    }
+		});
+	    }
+	    res.json(booking);
+
+	    
 	});
 	
 });
@@ -321,37 +348,85 @@ router.get('/pickup',global.isAuthenticated,function(req, res){
 });
 
 router.post('/confirm', global.isAuthenticated, function(req, res){
-	var user = req.user;
-	User.findOne({
-		_id : user._id
-	},function(err, user){
-		if(!user){
-			return res.status(500);
+    var user = req.user;
+
+    User.findOne({ _id : user._id },function(err, user){
+
+	if(err) { user.setConfirmed(false,function(err){ if(err){ res.status(500); return res.json({ "error" : "An internal error occurred" }); } });
+		  res.status(500);
+		  return res.json({"error": "An internal error occurred"}); 
 		}
-		user.setConfirmed(req.body.confirmed,function(err){
+	if(!user){ user.setConfirmed(false,function(err){ if(err){ res.status(500); return res.json({ "error" : "An internal error occurred" }); } });
+		   res.status(500); 
+		   return res.json({ "error": "An internal error occurred"}); }
+
+	user.setConfirmed(true,function(err){ if(err){ res.status(500); return res.json({ "error" : "An internal error occurred" }); } });
+
+	if(req.body.confirmed)
+	{
+	    mongo2wiki.extractMongo(user.email, User, Talk, Booking, Accommodation, Pickup, function(err,result) { 
+		if (err){ user.setConfirmed(false,function(err){ if(err){ res.status(500); return res.json({ "error" : "An internal error occurred" }); } });
+			  res.status(500); 
+			  return res.json({"error" : "An internal error occurred"}); } 
+
+		talktitle = "2015:" + result.talktype + ":" + result.talktitle;			    
+		usertitle = "signup:users:" + result.usertitle;
+
+		usertext = "";
+		usertext += result.bookingtext;
+		usertext += result.accommodationtext;
+		usertext += result.pickuptext;
+		usertext += "----";
+
+		talktext = "= " + result.talktitle + " =\n" ;
+		talktext += "A "+ result.talktype  + " by " + result.usertitle+", at "+ result.eventtype +"\n";
+		talktext += result.talktext;
+		talktext += "by : " +  result.usertitle + "\n";
+		talktext += "descript_hidden : A "+ result.talktype  + " by " + result.usertitle+", \n";
+		talktext += "----";
+
+		async.series([
+		    mongo2wiki.loadWiki(talktitle, talktext, function(err,result){ 
 			if(err){
-				res.status(500);
-				res.json({
-					"error" : "An internal error occurred"
-				})
+			    user.setConfirmed(false,function(err){ 
+				if(err){
+				    res.status(500); 
+				    return res.json({"error": "An internal error occurred"});
+				} 
+			    });
+
+			    res.status(500); 
+			    return res.json({"error": "An internal error occurred"});
+			} 
+		    }),
+		    mongo2wiki.loadWiki(usertitle, usertext, function(err,result){ 
+			if(err){
+			    user.setConfirmed(false,function(err){ 
+				if(err){
+				    res.status(500); 
+				    return res.json({"error": "An internal error occurred"});
+				} 
+			    });
+
+			    res.status(500); 
+			    return res.json({"error": "An internal error occurred"});
 			}
-		    if(req.body.confirmed)
-		    {
-			mongo2wiki.extractMongo(user.email, User, Talk, Booking, Accommodation, Pickup, function(err,result) { 
-			    if (err){ console.log(err); } 
-			    talktitle = "2015:" + result.talktype + ":" + result.talktitle;
-			    usertitle = "signup:users:" + result.usertitle;
-			    mongo2wiki.loadWiki(talktitle, result.talktext, function(err){ console.log(err); });
-			    mongo2wiki.loadWiki(usertitle, result.usertext, function(err){ console.log(err); });
-			    mongo2wiki.createUser(result.usertitle,"hhuser1234",result.usertitle,result.useremail);
-			    //console.log(talktitle,result.talktext,usertitle,result.usertext,result.useremail);
-			});
-		    }
-			return res.json({
-				confirmed : req.body.confirmed
-			});
-		});
-	});
+			else {
+			    user.setConfirmed(true,function(err){ 
+				if(err){
+				    res.status(500); 
+				    return res.json({"error": "An internal error occurred"});
+				} 
+			    });
+
+			    res.status(200); 
+			    return res.json({"confirmed": true});
+			}
+		    }),
+		],null);
+	    });
+	}
+    });
 });
 
 router.get('/summary/:id',function(req, res){
