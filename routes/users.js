@@ -35,23 +35,50 @@ router.post('/reservedates', global.isAuthenticated ,function(req, res){
 		});
 	}
 	Booking.findOne({
-		user : req.user._id
+	    user : req.user._id
 	},function(error, booking){
-		if(error){
-			return next(error);
-		}
-		if(!booking)
-			booking = new Booking(); //Create new booking
-		booking.arrival_date = arrivalDate.valueOf();
-		booking.departure_date = departureDate.valueOf();
-		/*booking.dates = eventDates; //set dates*/
-		booking.accommodation = !!(accommodation); //Set accommodation as boolean
-		booking.pickup = !!(pickup); //Set pickup as boolean
-		booking.talk = !!req.body.talk;
-		booking.user = user._id; //Set user id
-		booking.username = req.body.username;
-		booking.save(); //Saves
-		res.json(booking);
+	    if(error){
+		return next(error);
+	    }
+	    var userId = req.user._id;
+	    if(!booking)
+		booking = new Booking(); //Create new booking
+	    booking.arrival_date = arrivalDate.valueOf();
+	    booking.departure_date = departureDate.valueOf();
+	    /*booking.dates = eventDates; //set dates*/
+	    booking.accommodation = !!(accommodation); //Set accommodation as boolean
+	    booking.pickup = !!(pickup); //Set pickup as boolean
+	    booking.talk = !!req.body.talk;
+	    booking.user = user._id; //Set user id
+	    booking.username = req.body.username;
+	    booking.save(); //Saves
+
+	    if(!accommodation) {
+		Accommodation.remove({user: userId}, function(error) {
+		    if(error) {
+			console.log('Error occurred while deleting');
+		    }
+		});
+	    }
+
+	    if(!pickup) {
+		Pickup.remove({user: userId}, function(error) {
+		    if(error) {
+			console.log('Error occurred while deleting');
+		    }
+		});
+	    }
+
+	    if(!req.body.talk) {
+		Talk.remove({user: userId}, function(error) {
+		    if(error) {
+			console.log('Error occurred while deleting');
+		    }
+		});
+	    }
+	    res.json(booking);
+
+	    
 	});
 	
 });
