@@ -497,6 +497,11 @@ router.get('/summary/:id',function(req, res){
 			    bookingJSON.talk = bookingJSON.talk ? 1 : 0;
 			    bookingJSON.pickup = bookingJSON.pickup ? 1 : 0;
 			    bookingJSON.accommodation = bookingJSON.accommodation ? 1 : 0;
+			    bookingJSON.main_conference = bookingJSON.main_conference ? 1 : 0;
+			    bookingJSON.pre_conference = bookingJSON.pre_conference ? 1 : 0;
+			    bookingJSON.learn_to_code  = bookingJSON.learn_to_code ? 1 : 0;
+			    bookingJSON.teach_school_outreach  = bookingJSON.teach_school_outreach ? 1 : 0;
+			    bookingJSON.teach_learn_to_code  = bookingJSON.teach_learn_to_code ? 1 : 0;
 			    bookingJSON.departure_date = moment(bookingJSON.departure_date).format('DD-MM-YYYY');
 			    bookingJSON.arrival_date = moment(bookingJSON.arrival_date).format('DD-MM-YYYY');
 
