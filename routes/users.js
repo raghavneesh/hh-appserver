@@ -374,7 +374,16 @@ router.post('/confirm', global.isAuthenticated, function(req, res){
 			  res.status(500); 
 			  return res.json({"error" : "An internal error occurred"}); } 
 
-		talktitle = "2015:" + result.talktype + ":" + result.talktitle;			    
+		if(result.talktitle) {
+		    talktitle = "2015:" + result.talktype + ":" + result.talktitle;			    
+		    talktext = "= " + result.talktitle + " =\n" ;
+		    talktext += "A "+ result.talktype  + " by " + result.usertitle+", at "+ result.eventtype +"\n";
+		    talktext += result.talktext;
+		    talktext += "by : " +  result.usertitle + "\n";
+		    talktext += "descript_hidden : A "+ result.talktype  + " by " + result.usertitle+", \n";
+		    talktext += "----";
+		}
+
 		usertitle = "signup:users:" + result.usertitle;
 
 		usertext = "";
@@ -382,28 +391,49 @@ router.post('/confirm', global.isAuthenticated, function(req, res){
 		usertext += result.accommodationtext;
 		usertext += result.pickuptext;
 		usertext += "----";
+		
+		if(result.talktitle) {
+		    async.series([
+			mongo2wiki.loadWiki(talktitle, talktext, function(err,result){ 
+			    if(err){
+				user.setConfirmed(false,function(err){ 
+				    if(err){
+					res.status(500); 
+					return res.json({"error": "An internal error occurred"});
+				    } 
+				});
 
-		talktext = "= " + result.talktitle + " =\n" ;
-		talktext += "A "+ result.talktype  + " by " + result.usertitle+", at "+ result.eventtype +"\n";
-		talktext += result.talktext;
-		talktext += "by : " +  result.usertitle + "\n";
-		talktext += "descript_hidden : A "+ result.talktype  + " by " + result.usertitle+", \n";
-		talktext += "----";
+				res.status(500); 
+				return res.json({"error": "An internal error occurred"});
+			    } 
+			}),
+			mongo2wiki.loadWiki(usertitle, usertext, function(err,result){ 
+			    if(err){
+				user.setConfirmed(false,function(err){ 
+				    if(err){
+					res.status(500); 
+					return res.json({"error": "An internal error occurred"});
+				    } 
+				});
 
-		async.series([
-		    mongo2wiki.loadWiki(talktitle, talktext, function(err,result){ 
-			if(err){
-			    user.setConfirmed(false,function(err){ 
-				if(err){
-				    res.status(500); 
-				    return res.json({"error": "An internal error occurred"});
-				} 
-			    });
+				res.status(500); 
+				return res.json({"error": "An internal error occurred"});
+			    }
+			    else {
+				user.setConfirmed(true,function(err){ 
+				    if(err){
+					res.status(500); 
+					return res.json({"error": "An internal error occurred"});
+				    } 
+				});
 
-			    res.status(500); 
-			    return res.json({"error": "An internal error occurred"});
-			} 
-		    }),
+				res.status(200); 
+				return res.json({"confirmed": true});
+			    }
+			}),
+		    ],null);
+		}
+		else {
 		    mongo2wiki.loadWiki(usertitle, usertext, function(err,result){ 
 			if(err){
 			    user.setConfirmed(false,function(err){ 
@@ -427,8 +457,8 @@ router.post('/confirm', global.isAuthenticated, function(req, res){
 			    res.status(200); 
 			    return res.json({"confirmed": true});
 			}
-		    }),
-		],null);
+		    });		    
+		}
 	    });
 	}
     });
