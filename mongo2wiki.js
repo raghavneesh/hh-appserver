@@ -81,10 +81,7 @@ module.exports = {
 
 		    wikidata.bookingtext += "---- dataentry signup ----\n";
 		    wikidata.bookingtext += "type : signup\n";
-		    wikidata.bookingtext += "interestlevel : " +
-			(users.confirmed ?
-			 "Yes I am coming, dates set!" :
-			 "I am thinking of coming, not sure yet") + "\n";
+		    wikidata.bookingtext += "interestlevel : confirmed\n";
 		    
 		    wikidata.bookingtext += "accommodation : " +
 			(bookings.accommodation ?
